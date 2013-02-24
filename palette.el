@@ -34,6 +34,8 @@
 ;;
 ;;; Code:
 
+(require 'carton)
+
 (defgroup palette nil
   "Settings for the Palette package manager.")
 
@@ -78,6 +80,7 @@
             (pt/write-sources)
             "\n\n"
             (pt/write-depends))
+    (message packed-palette)
     packed-palette))
 
 (defun pt/palette-ship ()

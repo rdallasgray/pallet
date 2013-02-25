@@ -44,16 +44,35 @@
   :type 'boolean
   :group 'pallet)
 
+(defvar pt/cartonised nil)
+
 (defun pallet-init ()
   "Bootstrap a Carton setup from Elpa details."
   (interactive)
-  (pt/pallet-ship)
-  (carton-setup user-emacs-directory))
+  (pt/pallet-ship))
 
 (defun pallet-repack ()
   "Recreate the Carton file from Elpa details."
   (interactive)
   (pt/pallet-ship))
+
+(defun pallet-install ()
+  "Install packages from the Carton file."
+  (interactive)
+  (pt/cartonise)
+  (carton-install))
+
+(defun pallet-update ()
+  "Update installed packages."
+  (interactive)
+  (pt/cartonise)
+  (carton-update))
+
+(defun pt/cartonise ()
+  "Set up a carton project in the user's Emacs directory."
+  (when (not pt/cartonised)
+    (carton-setup user-emacs-directory)
+    (setq pt/cartonised t)))
 
 (defun pt/carton-file ()
   "Location of the Carton file."

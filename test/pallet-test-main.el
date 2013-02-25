@@ -52,7 +52,7 @@
       (should (equal file-path (expand-file-name "Carton" user-emacs-directory)))
       (should (equal file-contents (mock-cartonfile))))))
 
-(ert-deftest pt-test/update-on-close ()
+(ert-deftest pt-test/repack-on-close ()
   "it should run pt/pallet-ship on close."
   (let ((shipped nil))
     (flet ((pt/pallet-ship ()

@@ -39,7 +39,7 @@
 (defgroup pallet nil
   "Settings for the Pallet package manager.")
 
-(defcustom pallet-update-on-close t
+(defcustom pallet-repack-on-close t
   "Whether to update the Carton file on closing Emacs."
   :type 'boolean
   :group 'pallet)
@@ -50,7 +50,7 @@
   (pt/pallet-ship)
   (carton-setup user-emacs-directory))
 
-(defun pallet-update ()
+(defun pallet-repack ()
   "Recreate the Carton file from Elpa details."
   (interactive)
   (pt/pallet-ship))
@@ -59,10 +59,10 @@
   "Location of the Carton file."
   (expand-file-name "Carton" user-emacs-directory))
 
-(defun pt/maybe-enable-update-on-close ()
-  "Add a hook to run pallet when Emacs closes."
-  (when pallet-update-on-close
-    (add-hook 'kill-emacs-hook 'pallet-update)))
+(defun pt/maybe-enable-repack-on-close ()
+  "Add a hook to run pallet-repack when Emacs closes."
+  (when pallet-repack-on-close
+    (add-hook 'kill-emacs-hook 'pallet-repack)))
 
 (defun pt/pallet-pick ()
   "Get a simple list of Elpa-installed packages."
@@ -102,7 +102,7 @@
   (with-temp-file file
     (insert contents)))
 
-(pt/maybe-enable-update-on-close)
+(pt/maybe-enable-repack-on-close)
 
 (provide 'pallet)
 ;;; pallet.el ends here

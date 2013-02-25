@@ -23,11 +23,9 @@
 (defun mock-archive-alist ()
   '(("melpa" . "http://melpa.milkbox.net/packages/")))
 
-(defun mock-cartonfile ()
-  (let ((carton-string ""))
-    (concat carton-string "(source \"melpa\" \"http://melpa.milkbox.net/packages/\")\n\n")
-    (concat carton-string "(depends-on \"yasnippet\")\n(depends-on \"yaml-mode\")\n(depends-on \"wgrep-ack\")")
-    carton-string))
+(defun mock-cartonfile () nil
+  (concat "(source \"melpa\" \"http://melpa.milkbox.net/packages/\")\n\n"
+  "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
 
 (ert-deftest pt-test/pt/pallet-pick ()
   "it should get a list of package name strings from package-alist"
@@ -37,6 +35,8 @@
 (ert-deftest pt-test/pt/pallet-pack ()
   "it should construct a valid cartonfile"
   (let ((package-archives (mock-archive-alist)) (package-alist (mock-package-alist)))
+    (message "pack: %s" (pt/pallet-pack))
+    (message "carton: %s" (mock-cartonfile))
     (should (equal (pt/pallet-pack) (mock-cartonfile)))))
 
 (ert-deftest pt-test/pt/pallet-ship ()

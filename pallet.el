@@ -75,13 +75,7 @@
 
 (defun pt/pallet-pack ()
   "Construct a Cartonfile from Elpa's package-alist and package-archives."
-  (let ((packed-pallet ""))
-    (concat packed-pallet
-            (pt/write-sources)
-            "\n\n"
-            (pt/write-depends))
-    (message packed-pallet)
-    packed-pallet))
+  (format "%s\n\n%s" (pt/write-sources) (pt/write-depends)))
 
 (defun pt/pallet-ship ()
   "Create and save a Cartonfile based on installed packages and archives."
@@ -90,20 +84,18 @@
 (defun pt/write-sources ()
   "Create a Cartonfile source set from Elpa's package-archives."
   (if package-archives
-      (let ((sources ""))
+      (let ((source-list '()))
         (dolist (source package-archives)
-          (concat sources
-                  (format "(source %s %s)\n" (car source) (cdr source))))
-        sources)
-      nil))
+          (push (format "(source \"%s\" \"%s\")" (car source) (cdr source)) source-list))
+        (mapconcat 'identity source-list "\n"))
+    ""))
 
 (defun pt/write-depends ()
   "Create a Cartonfile dependency set from Elpa's package-alist-alist."
-  (let ((depends ""))
+  (let ((depends-list '()))
     (dolist (package (pt/pallet-pick))
-      (concat depends
-              (format "(depends-on %s)\n" package)))
-    depends))
+      (push (format "(depends-on \"%s\")" package) depends-list))
+    (mapconcat 'identity depends-list "\n")))
 
 (defun pt/write-file (file contents)
   "Write the given (string) contents to the file at the given path."

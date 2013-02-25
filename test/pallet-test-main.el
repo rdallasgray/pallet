@@ -3,8 +3,8 @@
   (setq pt-test/root-path (expand-file-name ".." current-directory)))
 
 (add-to-list 'load-path pt-test/root-path)
-(unload-feature 'palette t)
-(require 'palette)
+(unload-feature 'pallet t)
+(require 'pallet)
 (require 'cl)
 
 (defun mock-package-alist ()
@@ -29,17 +29,17 @@
     (concat carton-string "(depends-on \"yasnippet\")\n(depends-on \"yaml-mode\")\n(depends-on \"wgrep-ack\")")
     carton-string))
 
-(ert-deftest pt-test/pt/palette-pick ()
+(ert-deftest pt-test/pt/pallet-pick ()
   "it should get a list of package name strings from package-alist"
   (let ((package-alist (mock-package-alist)))
-    (should (equal (pt/palette-pick) '("yasnippet" "yaml-mode" "wgrep-ack")))))
+    (should (equal (pt/pallet-pick) '("yasnippet" "yaml-mode" "wgrep-ack")))))
 
-(ert-deftest pt-test/pt/palette-pack ()
+(ert-deftest pt-test/pt/pallet-pack ()
   "it should construct a valid cartonfile"
   (let ((package-archives (mock-archive-alist)) (package-alist (mock-package-alist)))
-    (should (equal (pt/palette-pack) (mock-cartonfile)))))
+    (should (equal (pt/pallet-pack) (mock-cartonfile)))))
 
-(ert-deftest pt-test/pt/palette-ship ()
+(ert-deftest pt-test/pt/pallet-ship ()
   "it should write a Cartonfile to the user's emacs directory"
   (let ((package-archives (mock-archive-alist))
         (package-alist (mock-package-alist))
@@ -48,14 +48,14 @@
     (flet ((pt/write-file (file contents)
                           (setq file-path file)
                           (setq file-contents contents)))
-      (pt/palette-ship)
+      (pt/pallet-ship)
       (should (equal file-path (expand-file-name "Carton" user-emacs-directory)))
       (should (equal file-contents (mock-cartonfile))))))
 
 (ert-deftest pt-test/update-on-close ()
-  "it should run pt/palette-ship on close."
+  "it should run pt/pallet-ship on close."
   (let ((shipped nil))
-    (flet ((pt/palette-ship ()
+    (flet ((pt/pallet-ship ()
                           (setq shipped t)))
       (run-hooks 'kill-emacs-hook)
       (should (equal shipped t)))))

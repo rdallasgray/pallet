@@ -1,9 +1,9 @@
-;;; palette.el --- A minor mode to manage Elpa packages using Carton.
+;;; pallet.el --- A minor mode to manage Elpa packages using Carton.
 
 ;; Copyright (C) 2012 Robert Dallas Gray
 
 ;; Author: Robert Dallas Gray
-;; URL: https://github.com/rdallasgray/palette
+;; URL: https://github.com/rdallasgray/pallet
 ;; Version: 0
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
@@ -36,35 +36,35 @@
 
 (require 'carton)
 
-(defgroup palette nil
-  "Settings for the Palette package manager.")
+(defgroup pallet nil
+  "Settings for the Pallet package manager.")
 
-(defcustom palette-update-on-close t
+(defcustom pallet-update-on-close t
   "Whether to update the Carton file on closing Emacs."
   :type 'boolean
-  :group 'palette)
+  :group 'pallet)
 
-(defun palette-init ()
+(defun pallet-init ()
   "Bootstrap a Carton setup from Elpa details."
   (interactive)
-  (pt/palette-ship)
+  (pt/pallet-ship)
   (carton-setup user-emacs-directory))
 
-(defun palette-update ()
+(defun pallet-update ()
   "Recreate the Carton file from Elpa details."
   (interactive)
-  (pt/palette-ship))
+  (pt/pallet-ship))
 
 (defun pt/carton-file ()
   "Location of the Carton file."
   (expand-file-name "Carton" user-emacs-directory))
 
 (defun pt/maybe-enable-update-on-close ()
-  "Add a hook to run palette when Emacs closes."
-  (when palette-update-on-close
-    (add-hook 'kill-emacs-hook 'palette-update)))
+  "Add a hook to run pallet when Emacs closes."
+  (when pallet-update-on-close
+    (add-hook 'kill-emacs-hook 'pallet-update)))
 
-(defun pt/palette-pick ()
+(defun pt/pallet-pick ()
   "Get a simple list of Elpa-installed packages."
   (if package-alist
       (let ((picked '()))
@@ -73,19 +73,19 @@
         (reverse picked))
     nil))
 
-(defun pt/palette-pack ()
+(defun pt/pallet-pack ()
   "Construct a Cartonfile from Elpa's package-alist and package-archives."
-  (let ((packed-palette ""))
-    (concat packed-palette
+  (let ((packed-pallet ""))
+    (concat packed-pallet
             (pt/write-sources)
             "\n\n"
             (pt/write-depends))
-    (message packed-palette)
-    packed-palette))
+    (message packed-pallet)
+    packed-pallet))
 
-(defun pt/palette-ship ()
+(defun pt/pallet-ship ()
   "Create and save a Cartonfile based on installed packages and archives."
-    (pt/write-file (pt/carton-file) (pt/palette-pack)))
+    (pt/write-file (pt/carton-file) (pt/pallet-pack)))
 
 (defun pt/write-sources ()
   "Create a Cartonfile source set from Elpa's package-archives."
@@ -100,7 +100,7 @@
 (defun pt/write-depends ()
   "Create a Cartonfile dependency set from Elpa's package-alist-alist."
   (let ((depends ""))
-    (dolist (package (pt/palette-pick))
+    (dolist (package (pt/pallet-pick))
       (concat depends
               (format "(depends-on %s)\n" package)))
     depends))
@@ -112,5 +112,5 @@
 
 (pt/maybe-enable-update-on-close)
 
-(provide 'palette)
-;;; palette.el ends here
+(provide 'pallet)
+;;; pallet.el ends here

@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0
+;; Version: 0.0.1
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -28,6 +28,26 @@
 ;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
+;;
+;; [Carton](https://github.com/rejeep/carton.git) is quickly becoming the de-facto package management system for Emacs.
+;; It provides a simple format for creating manifest files, and a set of functionality to install and update packages
+;; (as well as some very useful utilities for package *development*).
+;;
+;; The piece missing from Carton is the functionality to create and maintain a manifest file *in tandem* with package.el,
+;; Emacs' built-in package system.
+;;
+;; You can, of course, manually maintain your Carton (manifest) file, but most of us like to use `M-x package-list-packages`
+;; to discover and install packages. Pallet lets you do exactly this.
+;;
+;; `M-x pallet-init` will look at your installed packages and source archives and create a valid Carton file in your Emacs directory.
+;; You now no longer need to keep your `/elpa` directory under version control; simply keep your Carton file under version
+;; control, and use Carton to keep your packages synchronised across Emacs installs.
+;;
+;; Pallet will update your Carton file when you close Emacs, or when you run `M-x pallet-repack`, so you can use
+;; `M-x package-list-packages` (or any other method) to install and delete packages as normal.
+;;
+;; You can install your Carton-managed packages using `pallet-install`, and update them using `pallet-update`.
+;; These commands are just interactive aliases of the relevant Carton functions.
 ;;
 ;;
 ;; See the README for more details.

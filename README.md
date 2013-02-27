@@ -6,6 +6,8 @@ Pallet is a simple package-management system for Emacs.
 
 It uses rejeep's excellent [Carton](https://github.com/rejeep/carton.git) as a platform to keep track of your installed packages.
 
+You can install it, via [Melpa](http://melpa.milkbox.net), using `package-list-packages`.
+
 ##What problem does Pallet solve?
 
 You are an Emacs user, and you use package.el to maintain a set of installed packages, via the Elpa archive (and/or Melpa, Marmalade, whatever). You use Emacs at more than one site or on more than one machine, and you want to use the same packages with each Emacs installation.

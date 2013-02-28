@@ -20,7 +20,7 @@ Working this way with the `/elpa` directory quickly becomes a chore, though. The
 
 ###Carton
 
-[Carton](https://github.com/rejeep/carton.git) is quickly becoming the de-facto package management system for Emacs. It provides a simple format for creating manifest files, and a set of functionality to install and update packages (as well as some very useful utilities for package *development*).
+[Carton](https://github.com/rejeep/carton.git) is a dependency manager for Emacs, which is gaining currency especially in new Elisp projects. It provides a simple format for creating manifest files, and a set of functionality to install and update packages (as well as some very useful utilities for package *development*).
 
 The piece missing from Carton is the functionality to create and maintain a manifest file *in tandem* with package.el, Emacs' built-in package system.
 
@@ -34,7 +34,11 @@ Pallet will update your Carton file when you close Emacs, or when you run `M-x p
 
 You can install your Carton-managed packages using `pallet-install`, and update them using `pallet-update`. These commands are just interactive aliases of the relevant Carton functions.
 
-###What's coming?
+##Alternatives
+
+[el-get](https://github.com/dimitri/el-get) is a popular and feature-packed project which does much more than Pallet. Pallet just tries to do one simple thing well enough.
+
+##What's coming?
 
 More configurability, maybe package versioning and rollbacks, dependency awareness ... tell me what you need, or, better, contribute.
 

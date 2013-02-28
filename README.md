@@ -36,5 +36,5 @@ You can install your Carton-managed packages using `pallet-install`, and update 
 
 ###What's coming?
 
-More configurability, availability on Melpa, maybe package versioning and rollbacks ... tell me what you need, or, better, contribute.
+More configurability, maybe package versioning and rollbacks, dependency awareness ... tell me what you need, or, better, contribute.
 

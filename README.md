@@ -16,7 +16,7 @@ The standard way of synchronising settings among Emacs installs is to keep your 
 
 ###Package management
 
-Working this way with the `/elpa` directory quickly becomes a chore, though. The directory can become large and complex, and you can encounter merge conflicts when trying to synchronise it across Emacs installs. The solution is a package management system (like Ruby's [Bundler](http://gembundler.com), for example) which allows you to keep one 'manifest' file under version control, and ignore the *actual* installed packages; the manifest file lists packages and versions, and the package management system can install and update the listed packages whenever required to.
+Working this way with the `/elpa` directory quickly becomes a chore, though. The directory can become large and complex, and you can encounter merge conflicts when trying to synchronise it across Emacs installs. The solution is a dependency management system (like Ruby's [Bundler](http://gembundler.com), for example) which allows you to keep one 'manifest' file under version control, and ignore the *actual* installed packages; the manifest file lists packages and versions, and the dependency manager can install and update the listed packages whenever required to.
 
 ###Carton
 

@@ -3,44 +3,51 @@
   (setq pt-test/root-path (expand-file-name ".." current-directory)))
 
 (add-to-list 'load-path pt-test/root-path)
-(unload-feature 'pallet t)
+(if (featurep 'pallet)
+    (unload-feature 'pallet t))
 (require 'pallet)
 (require 'cl)
 
 (defun mock-package-alist ()
   '((yasnippet .
-                      [(20130218 2229)
-                       nil "Yet another snippet extension for Emacs. [source: github]"])
-           (yaml-mode .
-                      [(20120901 1329)
-                       nil "Major mode for editing YAML files [source: github]"])
-           (wgrep-ack .
-                      [(20121201 2230)
-                       ((wgrep
-                         (2 1 1)))
-                       "Writable ack-and-a-half buffer and apply the changes to files [source: github]"])))
+               [(20130218 2229)
+                nil "Yet another snippet extension for Emacs. [source: github]"])
+    (yaml-mode .
+               [(20120901 1329)
+                nil "Major mode for editing YAML files [source: github]"])
+    (wgrep-ack .
+               [(20121201 2230)
+                ((wgrep
+                  (2 1 1)))
+                "Writable ack-and-a-half buffer and apply the changes to files [source: github]"])))
 
 (defun mock-archive-alist ()
   '(("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (defun mock-cartonfile () nil
   (concat "(source \"melpa\" \"http://melpa.milkbox.net/packages/\")\n\n"
-  "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
+          "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
 
-(ert-deftest pt-test/pt/pallet-pick ()
+(defun mock-package-list ()
+  '("yasnippet" "yaml-mode" "wgrep-ack"))
+
+(defun mock-carton-dependencies ()
+  '([cl-struct-carton-dependency yasnippet nil]
+    [cl-struct-carton-dependency yaml-mode nil]
+    [cl-struct-carton-dependency wgrep-ack nil]))
+
+(ert-deftest pt-test/pallet-pick-packages ()
   "it should get a list of package name strings from package-alist"
   (let ((package-alist (mock-package-alist)))
-    (should (equal (pt/pallet-pick) '("yasnippet" "yaml-mode" "wgrep-ack")))))
+    (should (equal (pt/pallet-pick-packages) (mock-package-list)))))
 
-(ert-deftest pt-test/pt/pallet-pack ()
-  "it should construct a valid cartonfile"
+(ert-deftest pt-test/pallet-pack ()
+  "it should construct a valid cartonfile from pt/pallet-pick-packages"
   (let ((package-archives (mock-archive-alist)) (package-alist (mock-package-alist)))
-    (message "pack: %s" (pt/pallet-pack))
-    (message "carton: %s" (mock-cartonfile))
-    (should (equal (pt/pallet-pack) (mock-cartonfile)))))
+    (should (equal (pt/pallet-pack package-archives (pt/pallet-pick-packages)) (mock-cartonfile)))))
 
-(ert-deftest pt-test/pt/pallet-ship ()
-  "it should write a Cartonfile to the user's emacs directory"
+(ert-deftest pt-test/pallet-repack ()
+  "it should write a Cartonfile to the user's emacs directory based on package-alist"
   (let ((package-archives (mock-archive-alist))
         (package-alist (mock-package-alist))
         (file-path "")
@@ -48,14 +55,72 @@
     (flet ((pt/write-file (file contents)
                           (setq file-path file)
                           (setq file-contents contents)))
-      (pt/pallet-ship)
+      (pallet-repack)
       (should (equal file-path (expand-file-name "Carton" user-emacs-directory)))
       (should (equal file-contents (mock-cartonfile))))))
 
 (ert-deftest pt-test/repack-on-close ()
-  "it should run pt/pallet-ship on close."
-  (let ((shipped nil))
-    (flet ((pt/pallet-ship ()
-                          (setq shipped t)))
+  "it should run pt/pallet-repack on close."
+  (let ((repacked nil) (pallet-repack-on-close t))
+    (flet ((pallet-repack ()
+                           (setq repacked t)))
       (run-hooks 'kill-emacs-hook)
-      (should (equal shipped t)))))
+      (should (equal repacked t)))))
+
+(ert-deftest pt-test/pack-on-install ()
+  "it should pack a package when installed."
+  (let ((packed nil) (pallet-pack-on-install t))
+    (flet ((pt/pallet-pack-one (package)
+                               (setq packed package))
+           (package-install (name)))
+      (package-install "test-package")
+      (should (equal packed "test-package")))))
+
+(ert-deftest pt-test/unpack-on-delete ()
+  "it should unpack a package on delete."
+  (let ((unpacked nil) (pallet-unpack-on-delete t))
+    (flet ((pt/pallet-unpack-one (package)
+                                 (setq unpacked package))
+           (package-delete (name version)))
+      (package-delete "test-package" "012")
+      (should (equal unpacked "test-package")))))
+
+(ert-deftest pt-test/pack-one ()
+  "it should add a package definition to the Carton file."
+  (let ((cartonfile (mock-cartonfile))
+        (carton-runtime-dependencies (mock-carton-dependencies))
+        (package-archives (mock-archive-alist))
+        (file-contents ""))
+    (flet ((package-install (package))
+           (pt/write-file (file contents)
+                          (setq file-contents contents))
+           (pt/cartonise))      
+      (package-install "test-package")
+      (should (string-match "(depends-on \"test-package\"" file-contents)))))
+
+(ert-deftest pt-test/unpack-one ()
+  "it should remove a package definition from the Carton file."
+  (let ((cartonfile (mock-cartonfile))
+        (carton-runtime-dependencies (mock-carton-dependencies))
+        (package-archives (mock-archive-alist))
+        (file-contents ""))
+    (flet ((package-delete (package version))
+           (pt/write-file (file contents)
+                          (setq file-contents contents))
+           (pt/cartonise))      
+      (package-delete "yasnippet" nil)
+      (should (string-match "yaml-mode" file-contents))
+      (should-not (string-match "yasnippet" file-contents)))))
+
+(ert-deftest pt-test/pallet-pick-carton ()
+  "it should get a list of package names from a Carton file."
+  (let ((carton-runtime-dependencies (mock-carton-dependencies)))
+    (flet ((pt/cartonise))
+      (should (equal (pt/pallet-pick-carton) (mock-package-list))))))
+
+(ert-deftest pt/pallet-pick-carton-except ()
+  "it should exclude a package from a package list."
+  (let ((carton-runtime-dependencies (mock-carton-dependencies))
+        (package-list (cdr (mock-package-list))))
+    (flet ((pt/cartonise))
+      (should (equal (pt/pallet-pick-carton-except 'yasnippet) package-list)))))

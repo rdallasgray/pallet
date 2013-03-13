@@ -28,6 +28,8 @@ You can, of course, manually maintain your Carton (manifest) file, but most of u
 
 ##How does it work?
 
+First, you need to install Pallet (via Melpa being the easiest way), and `(require 'pallet)` in your Emacs initialisation file.
+
 `M-x pallet-init` will look at your installed packages and source archives and create a valid Carton file in your Emacs directory. You now no longer need to keep your `/elpa` directory under version control; simply keep your Carton file under version control, and use Carton to keep your packages synchronised across Emacs installs.
 
 Pallet will update your Carton file when you close Emacs, or when you run `M-x pallet-repack`, so you can use `M-x package-list-packages` (or any other method) to install and delete packages as normal.

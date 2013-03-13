@@ -77,7 +77,7 @@
 (defun pallet-init ()
   "Bootstrap a Carton setup from Elpa details."
   (interactive)
-  (pt/pallet-repack))
+  (pallet-repack))
 
 (defun pallet-repack ()
   "Recreate the Carton file from Elpa details."

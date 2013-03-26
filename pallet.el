@@ -186,6 +186,7 @@
   (let ((depends-list '()))
     (dolist (package package-list)
       (push (format "(depends-on \"%s\")" package) depends-list))
+    (sort depends-list #'string<)
     (mapconcat 'identity depends-list "\n")))
 
 (defun pt/write-file (file contents)

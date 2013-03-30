@@ -14,12 +14,11 @@ TEST_FILE=test/pallet-test-main.el
 
 all: build-cleanup
 
-.PHONY : setup clean version carton rename-package commentary test build
+.PHONY : setup clean version carton rename-package commentary test build release
 
 release: test
 	@echo "Committing"
 	@`git add . && git commit -a -m "${VERSION}"`
-	@`git push origin master`
 
 setup:
 	@echo "Copying src to tmp"

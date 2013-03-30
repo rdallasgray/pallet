@@ -16,8 +16,6 @@ all: build-cleanup
 
 .PHONY : setup clean version carton rename-package commentary test build
 
-# melpa recipe, release
-
 setup:
 	@echo "Copying src to tmp"
 	@`cp -R ${SRC_DIR} ${TMP_DIR}`

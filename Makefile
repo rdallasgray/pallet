@@ -9,18 +9,21 @@ VERSION=$(TAG).$(REV)
 YEAR=$(shell date +"%Y")
 VERSIONED_FILES=src-pkg.el pallet.el
 COMMENTARY_FILE=README.md
+TEST_FILE=test/pallet-test-main.el
+CLEAN=$(`echo 'Removing tmp' && rm -Rf tmp`)
 
-all: rename-package
+all: build
 
-# readme, melpa recipe, test
+.PHONY : setup clean version carton rename-package commentary test build
+
+# melpa recipe, release
 
 setup: clean
 	@echo "Copying src to tmp"
 	@`cp -R ${SRC_DIR} ${TMP_DIR}`
 
 clean:
-	@echo "Removing tmp"
-	@`rm -Rf tmp`
+	$(CLEAN)
 
 version: setup carton
 	@for FILE in $(VERSIONED_FILES); do \
@@ -34,10 +37,16 @@ carton:
 	@`cd src && carton package`
 
 rename-package: setup carton version
-	@echo "Renaming lib/src-pkg.el to lib/pallet-pkg.el"
-	@`mv lib/src-pkg.el lib/pallet-pkg.el`
+	@echo "Renaming tmp/src-pkg.el to tmp/pallet-pkg.el"
+	@`mv ${TMP_DIR}/src-pkg.el ${TMP_DIR}/pallet-pkg.el`
 
 commentary: setup
 	@echo "Inserting commentary"
 	@sed 's/^/;; /' < ${COMMENTARY_FILE} > ${TMP_DIR}/commentary
 	@sed -i '' -e '/@COMMENTARY/r ${TMP_DIR}/commentary' -e '//d' ${TMP_DIR}/pallet.el
+
+test: build
+	@`emacs -batch -l ert -l $(TEST_FILE) -f ert-run-tests-batch-and-exit`
+
+build: setup rename-package commentary
+	@`mv tmp/* lib/`

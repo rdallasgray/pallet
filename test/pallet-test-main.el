@@ -1,6 +1,8 @@
 (let ((current-directory (file-name-directory (if load-file-name load-file-name buffer-file-name))))
   (setq pt-test/test-path (expand-file-name "." current-directory))
-  (setq pt-test/root-path (expand-file-name ".." current-directory)))
+  (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
+
+(provide 'carton)
 
 (add-to-list 'load-path pt-test/root-path)
 (if (featurep 'pallet)
@@ -90,13 +92,16 @@
   (let ((cartonfile (mock-cartonfile))
         (carton-runtime-dependencies (mock-carton-dependencies))
         (package-archives (mock-archive-alist))
-        (file-contents ""))
+        (file-contents "")
+        (depends-on-called nil))
     (flet ((package-install (package))
+           (depends-on (arg)
+                       (setq depends-on-called t))
            (pt/write-file (file contents)
                           (setq file-contents contents))
-           (pt/cartonise))      
+           (pt/cartonise))
       (package-install "test-package")
-      (should (string-match "(depends-on \"test-package\"" file-contents)))))
+      (should (eq depends-on-called t)))))
 
 (ert-deftest pt-test/unpack-one ()
   "it should remove a package definition from the Carton file."

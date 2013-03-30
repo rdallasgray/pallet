@@ -16,6 +16,11 @@ all: build-cleanup
 
 .PHONY : setup clean version carton rename-package commentary test build
 
+release: test
+	@echo "Committing"
+	@`git add . && git commit -a -m "${VERSION}"`
+	@`git push origin master`
+
 setup:
 	@echo "Copying src to tmp"
 	@`cp -R ${SRC_DIR} ${TMP_DIR}`

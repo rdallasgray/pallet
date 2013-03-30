@@ -18,7 +18,7 @@ all: build-cleanup
 
 release: test
 	@echo "Committing"
-	@`git add . && git commit -a -m "x"`
+	@`git add . && git commit -a -m "${VERSION}"`
 
 setup:
 	@echo "Copying src to tmp"

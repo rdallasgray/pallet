@@ -1,4 +1,4 @@
-;;; pallet.el --- A minor mode to manage Elpa packages using Carton.
+;;; pallet.el --- Manage your packages with Carton.
 
 ;; Copyright (C) @YEAR Robert Dallas Gray
 

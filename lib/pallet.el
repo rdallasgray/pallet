@@ -1,10 +1,10 @@
-;;; pallet.el --- A minor mode to manage Elpa packages using Carton.
+;;; pallet.el --- Manage your packages with Carton.
 
 ;; Copyright (C) 2013 Robert Dallas Gray
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.9
+;; Version: 0.1.10
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 

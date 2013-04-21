@@ -67,13 +67,13 @@
   "Install packages from the Carton file."
   (interactive)
   (pt/cartonise)
-  (carton-install))
+  (carton-command-install))
 
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
   (pt/cartonise)
-  (carton-update))
+  (carton-command-update))
 
 (defun pt/cartonise ()
   "Set up a carton project in the user's Emacs directory."

@@ -2,7 +2,7 @@
 
 (package "pallet" "@VERSION" "A package manager for Emacs, using Carton.")
 
-(depends-on "carton" "0.1.1")
+(depends-on "carton" "0.3.0")
 
 (development
  (depends-on "ert"))

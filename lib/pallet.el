@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -219,7 +219,7 @@
 (defun pt/pallet-pack-one (package-name)
   "Add a package to the Cartonfile."
   (pt/cartonise)
-  (depends-on (format "%s" package-name))
+  (carton-add-dependency (format "%s" package-name))
   (pt/pallet-ship package-archives (pt/pallet-pick-carton)))
 
 (defun pt/pallet-unpack-one (package-name)

@@ -139,7 +139,7 @@
 (defun pt/pallet-pack-one (package-name)
   "Add a package to the Cartonfile."
   (pt/cartonise)
-  (depends-on (format "%s" package-name))
+  (carton-add-dependency (format "%s" package-name))
   (pt/pallet-ship package-archives (pt/pallet-pick-carton)))
 
 (defun pt/pallet-unpack-one (package-name)

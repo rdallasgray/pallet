@@ -43,6 +43,11 @@
   :type 'boolean
   :group 'pallet)
 
+(defcustom pallet-cartonise-on-load t
+  "Whether to read the Carton file on loading pallet."
+  :type 'boolean
+  :group 'pallet)
+
 (defcustom pallet-pack-on-install t
   "Whether to add a package to the Carton file on package-install."
   :type 'boolean
@@ -88,6 +93,10 @@
   "Add a hook to run pallet-repack when Emacs closes."
   (add-hook 'kill-emacs-hook 'pt/maybe-repack-on-close))
 
+(defun pt/enable-cartonise-on-load ()
+  "Add a hook to run pt/cartonise when Emacs has initialised."
+  (add-hook 'after-init-hook 'pt/maybe-cartonise-on-load))
+
 (defadvice package-install (after pt/after-install (package-name) activate)
   "Run pt/pallet-pack-one after package-install."
   (pt/maybe-pack-on-install package-name))
@@ -99,6 +108,10 @@
 (defun pt/maybe-repack-on-close ()
   "Repack if pallet-repack-on-close is true."
   (when pallet-repack-on-close (pallet-repack)))
+
+(defun pt/maybe-cartonise-on-load ()
+  "Load the Carton file if pallet-cartonise-on-load is true."
+  (when pallet-cartonise-on-load (pt/cartonise)))
 
 (defun pt/maybe-pack-on-install (package-name)
   "Pack the package if pallet-pack-on-install is true."
@@ -173,6 +186,7 @@
   (with-temp-file file
     (insert contents)))
 
+(pt/enable-cartonise-on-load)
 (pt/enable-repack-on-close)
 
 (provide 'pallet)

@@ -2,6 +2,9 @@
   (setq pt-test/test-path (expand-file-name "." current-directory))
   (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
 
+(defvar carton-setup-run nil)
+(defun carton-setup (dir)
+  (setq carton-setup-run t))
 (provide 'carton)
 
 (add-to-list 'load-path pt-test/root-path)
@@ -68,6 +71,10 @@
                            (setq repacked t)))
       (run-hooks 'kill-emacs-hook)
       (should (equal repacked t)))))
+
+(ert-deftest pt-test/repack-on-close ()
+  "it should run pt/cartonise on load."
+  (should (equal carton-setup-run t)))
 
 (ert-deftest pt-test/pack-on-install ()
   "it should pack a package when installed."

@@ -72,8 +72,9 @@
       (run-hooks 'kill-emacs-hook)
       (should (equal repacked t)))))
 
-(ert-deftest pt-test/repack-on-close ()
+(ert-deftest pt-test/cartonise-on-load ()
   "it should run pt/cartonise on load."
+  (run-hooks 'after-init-hook)
   (should (equal carton-setup-run t)))
 
 (ert-deftest pt-test/pack-on-install ()

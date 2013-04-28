@@ -33,8 +33,9 @@
 ;;
 ;;; Code:
 
-(require 'carton)
 (package-initialize)
+
+(require 'carton)
 
 (defgroup pallet nil
   "Settings for the Pallet package manager.")

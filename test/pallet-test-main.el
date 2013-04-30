@@ -14,17 +14,17 @@
 (require 'cl)
 
 (defun mock-package-alist ()
-  '((yasnippet .
-               [(20130218 2229)
-                nil "Yet another snippet extension for Emacs. [source: github]"])
-    (yaml-mode .
-               [(20120901 1329)
-                nil "Major mode for editing YAML files [source: github]"])
-    (wgrep-ack .
+  '((wgrep-ack .
                [(20121201 2230)
                 ((wgrep
                   (2 1 1)))
-                "Writable ack-and-a-half buffer and apply the changes to files [source: github]"])))
+                "Writable ack-and-a-half buffer and apply the changes to files [source: github]"])
+    (yaml-mode .
+               [(20120901 1329)
+                nil "Major mode for editing YAML files [source: github]"])
+    (yasnippet .
+               [(20130218 2229)
+                nil "Yet another snippet extension for Emacs. [source: github]"])))
 
 (defun mock-archive-alist ()
   '(("melpa" . "http://melpa.milkbox.net/packages/")))
@@ -34,7 +34,7 @@
           "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
 
 (defun mock-package-list ()
-  '("yasnippet" "yaml-mode" "wgrep-ack"))
+  '("wgrep-ack" "yaml-mode" "yasnippet"))
 
 (defun mock-carton-dependencies ()
   '([cl-struct-carton-dependency yasnippet nil]
@@ -48,8 +48,10 @@
 
 (ert-deftest pt-test/pallet-pack ()
   "it should construct a valid cartonfile from pt/pallet-pick-packages"
-  (let ((package-archives (mock-archive-alist)) (package-alist (mock-package-alist)))
-    (should (equal (pt/pallet-pack package-archives (pt/pallet-pick-packages)) (mock-cartonfile)))))
+  (let ((package-archives (mock-archive-alist))
+        (package-alist (mock-package-alist)))
+    (should (equal
+             (pt/pallet-pack package-archives (pt/pallet-pick-packages)) (mock-cartonfile)))))
 
 (ert-deftest pt-test/pallet-repack ()
   "it should write a Cartonfile to the user's emacs directory based on package-alist"
@@ -136,4 +138,4 @@
   (let ((carton-runtime-dependencies (mock-carton-dependencies))
         (package-list (cdr (mock-package-list))))
     (flet ((pt/cartonise))
-      (should (equal (pt/pallet-pick-carton-except 'yasnippet) package-list)))))
+      (should (equal (pt/pallet-pick-carton-except 'wgrep-ack) package-list)))))

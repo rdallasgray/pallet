@@ -143,7 +143,7 @@
       (let ((package-name (aref package-details 1)))
         (when (not (equal package-name excluded-package-name))
           (push (format "%s" package-name) picked))))
-    (reverse picked)))
+    picked))
 
 (defun pt/pallet-pack (archives packages)
   "Construct a Cartonfile from Elpa's package-alist and package-archives."
@@ -180,8 +180,8 @@
   (let ((depends-list '()))
     (dolist (package package-list)
       (push (format "(depends-on \"%s\")" package) depends-list))
-    (sort depends-list #'string<)
-    (mapconcat 'identity depends-list "\n")))
+    (let ((depends-list (sort depends-list #'string<)))
+      (mapconcat 'identity depends-list "\n"))))
 
 (defun pt/write-file (file contents)
   "Write the given (string) contents to the file at the given path."

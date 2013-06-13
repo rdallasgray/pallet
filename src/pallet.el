@@ -190,8 +190,8 @@
     (let ((depends-list (sort depends-list #'string<)))
       (mapconcat 'identity depends-list "\n"))))
 
-(defun pt/write-file (contents file)
-  "Write the given (string) CONTENTS to the FILE at the given path."
+(defun pt/write-file (file contents)
+  "Write to FILE the given (string) CONTENTS."
   (with-temp-file file
     (insert contents)))
 

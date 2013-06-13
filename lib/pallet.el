@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.9
+;; Version: 0.1.5
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -277,8 +277,8 @@
     (let ((depends-list (sort depends-list #'string<)))
       (mapconcat 'identity depends-list "\n"))))
 
-(defun pt/write-file (contents file)
-  "Write the given (string) CONTENTS to the FILE at the given path."
+(defun pt/write-file (file contents)
+  "Write to FILE the given (string) CONTENTS."
   (with-temp-file file
     (insert contents)))
 

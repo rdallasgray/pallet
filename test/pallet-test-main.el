@@ -1,4 +1,6 @@
-(let ((current-directory (file-name-directory (if load-file-name load-file-name buffer-file-name))))
+(let ((current-directory
+       (file-name-directory
+        (if load-file-name load-file-name buffer-file-name))))
   (setq pt-test/test-path (expand-file-name "." current-directory))
   (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
 
@@ -97,6 +99,14 @@
       (package-delete "test-package" "012")
       (should (equal unpacked "test-package")))))
 
+(ert-deftest pt-test/suspend-delete-on-update ()
+  "it should suspend deletes on update."
+  (let ((suspended nil))
+    (flet ((pt/suspend-delete (body) (setq suspended t))
+           (carton-command-update nil))
+      (pallet-update)
+      (should (equal suspended t)))))
+
 (ert-deftest pt-test/pack-one ()
   "it should add a package definition to the Carton file."
   (let ((cartonfile (mock-cartonfile))
@@ -122,7 +132,7 @@
     (flet ((package-delete (package version))
            (pt/write-file (file contents)
                           (setq file-contents contents))
-           (pt/cartonise))      
+           (pt/cartonise))
       (package-delete "yasnippet" nil)
       (should (string-match "yaml-mode" file-contents))
       (should-not (string-match "yasnippet" file-contents)))))

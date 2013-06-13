@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.6
+;; Version: 0.1.9
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -138,7 +138,7 @@
   :group 'pallet)
 
 (defcustom pallet-pack-on-install t
-  "Whether to add a package to the Carton file on package-install."
+  "Whether to add a package to the Carton file on `package-install'."
   :type 'boolean
   :group 'pallet)
 
@@ -166,8 +166,15 @@
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
-  (pt/cartonise)
-  (carton-command-update))
+  (pt/suspend-delete
+   (lambda ()
+     (pt/cartonise)
+     (carton-command-update))))
+
+(defun pt/suspend-delete (body)
+  "Suspend delete during execution of BODY."
+  (let ((pallet-unpack-on-delete nil))
+    (funcall body)))
 
 (defun pt/cartonise ()
   "Set up a carton project in the user's Emacs directory."
@@ -187,11 +194,11 @@
   (add-hook 'after-init-hook 'pt/maybe-cartonise-on-load))
 
 (defadvice package-install (after pt/after-install (package-name) activate)
-  "Run pt/pallet-pack-one after package-install."
+  "Run pt/pallet-pack-one after `package-install'."
   (pt/maybe-pack-on-install package-name))
 
 (defadvice package-delete (after pt/after-delete (package-name version) activate)
-  "Run pt/pallet-unpack-one after package-delete."
+  "Run pt/pallet-unpack-one after `package-delete'."
   (pt/maybe-unpack-on-delete package-name))
 
 (defun pt/maybe-repack-on-close ()
@@ -203,11 +210,11 @@
   (when pallet-cartonise-on-load (pt/cartonise)))
 
 (defun pt/maybe-pack-on-install (package-name)
-  "Pack the package if pallet-pack-on-install is true."
+  "Pack PACKAGE-NAME if pallet-pack-on-install is true."
   (when pallet-pack-on-install (pt/pallet-pack-one package-name)))
 
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack the pacakge if pallet-unpack-on-delete is true."
+  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is true."
   (when pallet-unpack-on-delete (pt/pallet-unpack-one package-name)))
 
 (defun pt/pallet-pick-packages ()
@@ -224,7 +231,7 @@
   (pt/pallet-pick-carton-except nil))
 
 (defun pt/pallet-pick-carton-except (excluded-package-name)
-  "Get a list of dependencies from the Carton file."
+  "Get a list of dependencies from the Carton file, excluding EXCLUDED-PACKAGE-NAME."
   (let ((picked '()))
     (dolist (package-details carton-runtime-dependencies)
       (let ((package-name (aref package-details 1)))
@@ -233,45 +240,45 @@
     picked))
 
 (defun pt/pallet-pack (archives packages)
-  "Construct a Cartonfile from Elpa's package-alist and package-archives."
+  "Construct a Cartonfile from ARCHIVES and PACKAGES."
   (format "%s\n\n%s"
           (pt/write-sources archives)
           (pt/write-depends packages)))
 
 (defun pt/pallet-pack-one (package-name)
-  "Add a package to the Cartonfile."
+  "Add PACKAGE-NAME to the Cartonfile."
   (pt/cartonise)
   (carton-add-dependency (format "%s" package-name))
   (pt/pallet-ship package-archives (pt/pallet-pick-carton)))
 
 (defun pt/pallet-unpack-one (package-name)
-  "Remove a package from the Cartonfile."
+  "Remove a PACKAGE-NAME from the Cartonfile."
   (pt/cartonise)
   (pt/pallet-ship package-archives
                   (pt/pallet-pick-carton-except (intern package-name))))
 
 (defun pt/pallet-ship (archives packages)
-  "Create and save a Cartonfile based on installed packages and archives."
+  "Create and save a Cartonfile based on installed ARCHIVES and PACKAGES."
     (pt/write-file (pt/carton-file)
                    (pt/pallet-pack archives packages)))
 
 (defun pt/write-sources (archive-list)
-  "Create a Cartonfile source set from Elpa's package-archives."
+  "Create a Cartonfile source set from ARCHIVE-LIST."
   (let ((source-list '()))
     (dolist (source archive-list)
       (push (format "(source \"%s\" \"%s\")" (car source) (cdr source)) source-list))
     (mapconcat 'identity source-list "\n")))
 
 (defun pt/write-depends (package-list)
-  "Create a Cartonfile dependency set from Elpa's package-alist."
+  "Create a Cartonfile dependency set from PACKAGE-LIST."
   (let ((depends-list '()))
     (dolist (package package-list)
       (push (format "(depends-on \"%s\")" package) depends-list))
     (let ((depends-list (sort depends-list #'string<)))
       (mapconcat 'identity depends-list "\n"))))
 
-(defun pt/write-file (file contents)
-  "Write the given (string) contents to the file at the given path."
+(defun pt/write-file (contents file)
+  "Write the given (string) CONTENTS to the FILE at the given path."
   (with-temp-file file
     (insert contents)))
 

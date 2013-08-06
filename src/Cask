@@ -1,0 +1,8 @@
+(source "melpa" "http://melpa.milkbox.net/packages/")
+
+(package "pallet" "@VERSION" "A package manager for Emacs, using Cask.")
+
+(depends-on "cask" "0.4.1")
+
+(development
+ (depends-on "ert"))

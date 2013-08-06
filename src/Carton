@@ -1,8 +1,0 @@
-(source "melpa" "http://melpa.milkbox.net/packages/")
-
-(package "pallet" "@VERSION" "A package manager for Emacs, using Carton.")
-
-(depends-on "carton" "0.3.0")
-
-(development
- (depends-on "ert"))

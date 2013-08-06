@@ -5,14 +5,14 @@
 Pallet is a simple package-management system for Emacs.
 
 It uses rejeep's excellent
-[Carton](https://github.com/rejeep/carton.git) as a platform to keep
+[Cask](https://github.com/rejeep/cask.el) as a platform to keep
 track of your installed packages.
 
 You can install it, via [Melpa](http://melpa.milkbox.net), using
 `list-packages`. Use it by adding ```(require 'pallet)``` to your
 `init.el` or `.emacs` file. You should add the line *before* you
 require other packages; it will run `(package initialize)` for you,
-and add the package archives listed in your Carton file.
+and add the package archives listed in your Cask file.
 
 ##What problem does Pallet solve?
 
@@ -41,19 +41,19 @@ keep one 'manifest' file under version control, and ignore the
 versions, and the dependency manager can install and update the listed
 packages whenever required to.
 
-###Carton
+###Cask
 
-[Carton](https://github.com/rejeep/carton.git) is a dependency manager
+[Cask](https://github.com/rejeep/cask.git) is a dependency manager
 for Emacs, which is gaining currency especially in new Elisp
 projects. It provides a simple format for creating manifest files, and
 a set of functionality to install and update packages (as well as some
 very useful utilities for package *development*).
 
-The piece missing from Carton is the functionality to create and
+The piece missing from Cask is the functionality to create and
 maintain a manifest file *in tandem* with package.el, Emacs' built-in
 package system.
 
-You can, of course, manually maintain your Carton (manifest) file, but
+You can, of course, manually maintain your Cask (manifest) file, but
 most of us like to use `M-x package-list-packages` to discover and
 install packages. Pallet lets you do exactly this.
 
@@ -63,16 +63,16 @@ First, you need to install Pallet (via Melpa being the easiest way),
 and `(require 'pallet)` in your Emacs initialisation file.
 
 `M-x pallet-init` will look at your installed packages and source
-archives and create a valid Carton file in your Emacs directory. You
+archives and create a valid Cask file in your Emacs directory. You
 now no longer need to keep your `/elpa` directory under version
-control; simply keep your Carton file under version control, and use
-Carton to keep your packages synchronised across Emacs installs.
+control; simply keep your Cask file under version control, and use
+Cask to keep your packages synchronised across Emacs installs.
 
-Pallet will update your Carton file when you add or delete packages via
+Pallet will update your Cask file when you add or delete packages via
 `list-packages`, or when you run `M-x pallet-repack`.  You can install
-your Carton-managed packages using `pallet-install`, and update them
+your Cask-managed packages using `pallet-install`, and update them
 using `pallet-update`. These commands are just interactive aliases of
-the relevant Carton functions.
+the relevant Cask functions.
 
 ##Alternatives
 
@@ -85,4 +85,3 @@ tries to do one simple thing well enough.
 More configurability, maybe package versioning and rollbacks,
 dependency awareness ... tell me what you need, or, better,
 contribute.
-

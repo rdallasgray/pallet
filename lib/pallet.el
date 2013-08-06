@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.21
+;; Version: 0.1.22
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -74,7 +74,7 @@
 ;; 
 ;; ###Cask
 ;; 
-;; [Cask](https://github.com/rejeep/cask.el.git) is a dependency manager
+;; [Cask](https://github.com/rejeep/cask.el) is a dependency manager
 ;; for Emacs, which is gaining currency especially in new Elisp
 ;; projects. It provides a simple format for creating manifest files, and
 ;; a set of functionality to install and update packages (as well as some
@@ -265,7 +265,7 @@
   "Create a Caskfile source set from ARCHIVE-LIST."
   (let ((source-list '()))
     (dolist (source archive-list)
-      (push (format "(source \"%s\" \"%s\")" (car source) (cdr source)) source-list))
+      (push (format "(source %s)" (car source)) source-list))
     (mapconcat 'identity source-list "\n")))
 
 (defun pt/write-depends (package-list)

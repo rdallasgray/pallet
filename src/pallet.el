@@ -179,7 +179,7 @@
   "Create a Caskfile source set from ARCHIVE-LIST."
   (let ((source-list '()))
     (dolist (source archive-list)
-      (push (format "(source \"%s\" \"%s\")" (car source) (cdr source)) source-list))
+      (push (format "(source %s)" (car source)) source-list))
     (mapconcat 'identity source-list "\n")))
 
 (defun pt/write-depends (package-list)

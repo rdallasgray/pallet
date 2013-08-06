@@ -32,7 +32,7 @@
   '(("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (defun mock-caskfile () nil
-  (concat "(source \"melpa\" \"http://melpa.milkbox.net/packages/\")\n\n"
+  (concat "(source melpa)\n\n"
           "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
 
 (defun mock-package-list ()

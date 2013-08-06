@@ -74,7 +74,7 @@
   "Install packages from the Cask file."
   (interactive)
   (pt/cask-up)
-  (cask-command-install))
+  (cask-install))
 
 (defun pallet-update ()
   "Update installed packages."
@@ -82,7 +82,7 @@
   (pt/suspend-delete
    (lambda ()
      (pt/cask-up)
-     (cask-command-update))))
+     (cask-update))))
 
 (defun pt/suspend-delete (body)
   "Suspend delete during execution of BODY."

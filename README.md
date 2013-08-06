@@ -43,7 +43,7 @@ packages whenever required to.
 
 ###Cask
 
-[Cask](https://github.com/rejeep/cask.git) is a dependency manager
+[Cask](https://github.com/rejeep/cask.el.git) is a dependency manager
 for Emacs, which is gaining currency especially in new Elisp
 projects. It provides a simple format for creating manifest files, and
 a set of functionality to install and update packages (as well as some

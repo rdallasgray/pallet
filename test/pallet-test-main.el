@@ -103,7 +103,7 @@
   "it should suspend deletes on update."
   (let ((suspended nil))
     (flet ((pt/suspend-delete (body) (setq suspended t))
-           (cask-command-update nil))
+           (cask-update nil))
       (pallet-update)
       (should (equal suspended t)))))
 

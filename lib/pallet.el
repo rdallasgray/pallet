@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.24
+;; Version: 0.2.0
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 

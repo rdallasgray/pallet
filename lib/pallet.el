@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.22
+;; Version: 0.1.23
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -265,8 +265,14 @@
   "Create a Caskfile source set from ARCHIVE-LIST."
   (let ((source-list '()))
     (dolist (source archive-list)
-      (push (format "(source %s)" (car source)) source-list))
+      (push (pt/format-source source) source-list))
     (mapconcat 'identity source-list "\n")))
+
+(defun pt/format-source (source)
+  "Return a string correctly formatting an archive SOURCE."
+  (if (member source cask-source-mapping)
+      (format "(source %s)" (car source))
+    (format "(source \"%s\" \"%s\")" (car source) (cdr source))))
 
 (defun pt/write-depends (package-list)
   "Create a Caskfile dependency set from PACKAGE-LIST."

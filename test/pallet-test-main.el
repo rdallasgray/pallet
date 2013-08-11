@@ -5,6 +5,8 @@
   (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
 
 (defvar cask-setup-run nil)
+(defvar cask-source-mapping
+  '((melpa . "http://melpa.milkbox.net/packages/")))
 (defun cask-setup (dir)
   (setq cask-setup-run t))
 (provide 'cask)
@@ -29,10 +31,12 @@
                 nil "Yet another snippet extension for Emacs. [source: github]"])))
 
 (defun mock-archive-alist ()
-  '(("melpa" . "http://melpa.milkbox.net/packages/")))
+  '((melpa . "http://melpa.milkbox.net/packages/")
+    (unknown . "http://example.com")))
 
 (defun mock-caskfile () nil
-  (concat "(source melpa)\n\n"
+  (concat "(source \"unknown\" \"http://example.com\")\n"
+          "(source melpa)\n\n"
           "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
 
 (defun mock-package-list ()

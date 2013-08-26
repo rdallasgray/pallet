@@ -33,10 +33,6 @@
 ;;
 ;;; Code:
 
-(package-initialize)
-
-(require 'cask)
-
 (defgroup pallet nil
   "Settings for the Pallet package manager.")
 

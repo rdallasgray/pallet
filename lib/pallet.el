@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.1.22
+;; Version: 0.1.23
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -118,10 +118,6 @@
 ;; contribute.
 ;;
 ;;; Code:
-
-(package-initialize)
-
-(require 'cask)
 
 (defgroup pallet nil
   "Settings for the Pallet package manager.")

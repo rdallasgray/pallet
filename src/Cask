@@ -2,4 +2,4 @@
 
 (package "pallet" "@VERSION" "A package manager for Emacs, using Cask.")
 
-(depends-on "cask" "0.4.1")
+(depends-on "cask" "0.4.6")

@@ -33,6 +33,13 @@
 ;;
 ;;; Code:
 
+(package-initialize)
+
+(defvar pt/package-archives-copy
+  (copy-alist package-archives))
+
+(require 'cask)
+
 (defgroup pallet nil
   "Settings for the Pallet package manager.")
 
@@ -59,36 +66,42 @@
 (defun pallet-init ()
   "Bootstrap a Cask setup from Elpa details."
   (interactive)
-  (pallet-repack))
+  (pallet-repack t))
 
-(defun pallet-repack ()
-  "Recreate the Cask file from Elpa details."
-  (interactive)
-  (pt/pallet-ship package-archives (pt/pallet-pick-packages)))
+(defun pallet-repack (&optional use-copy)
+  "Recreate the Cask file from Elpa details;
+use `pt/package-archives-copy' if USE-COPY is true."
+  (let ((archive-alist
+	 (if use-copy pt/package-archives-copy package-archives)))
+    (pt/pallet-ship archive-alist (pt/pallet-pick-packages))))
 
 (defun pallet-install ()
   "Install packages from the Cask file."
   (interactive)
-  (pt/cask-up)
-  (cask-install))
+  (pt/cask-up
+   (cask-install)))
 
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
   (pt/suspend-delete
    (lambda ()
-     (pt/cask-up)
-     (cask-update))))
+     (pt/cask-up
+      (cask-update)))))
 
 (defun pt/suspend-delete (body)
   "Suspend delete during execution of BODY."
   (let ((pallet-unpack-on-delete nil))
     (funcall body)))
 
-(defun pt/cask-up ()
-  "Set up a cask project in the user's Emacs directory."
-  (setq cask-runtime-dependencies '())
-  (cask-setup user-emacs-directory))
+(defun pt/cask-up (&optional body)
+  "Attempt to initialize Cask, optionally running BODY."
+  (if (file-exists-p (pt/cask-file))
+      (progn
+	(setq cask-runtime-dependencies '())
+	(cask-initialize)
+	(when body (funcall body)))
+    (message "No Cask file found. Run `pallet-init' to create one.")))
 
 (defun pt/cask-file ()
   "Location of the Cask file."
@@ -156,15 +169,17 @@
 
 (defun pt/pallet-pack-one (package-name)
   "Add PACKAGE-NAME to the Caskfile."
-  (pt/cask-up)
-  (cask-add-dependency (format "%s" package-name))
-  (pt/pallet-ship package-archives (pt/pallet-pick-cask)))
+  (pt/cask-up
+   (progn
+     (cask-add-dependency (format "%s" package-name))
+     (pt/pallet-ship package-archives (pt/pallet-pick-cask)))))
 
 (defun pt/pallet-unpack-one (package-name)
   "Remove a PACKAGE-NAME from the Caskfile."
-  (pt/cask-up)
-  (pt/pallet-ship package-archives
-                  (pt/pallet-pick-cask-except (intern package-name))))
+  (pt/cask-up
+   (progn
+     (pt/pallet-ship package-archives
+		     (pt/pallet-pick-cask-except (intern package-name))))))
 
 (defun pt/pallet-ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
@@ -201,4 +216,5 @@
 (pt/enable-repack-on-close)
 
 (provide 'pallet)
+
 ;;; pallet.el ends here

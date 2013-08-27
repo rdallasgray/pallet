@@ -66,7 +66,8 @@
 (defun pallet-init ()
   "Bootstrap a Cask setup from Elpa details."
   (interactive)
-  (pallet-repack t))
+  (pallet-repack t)
+  (pallet-install))
 
 (defun pallet-repack (&optional use-copy)
   "Recreate the Cask file from Elpa details;
@@ -79,7 +80,7 @@ use `pt/package-archives-copy' if USE-COPY is true."
   "Install packages from the Cask file."
   (interactive)
   (pt/cask-up
-   (cask-install)))
+   (lambda () (cask-install))))
 
 (defun pallet-update ()
   "Update installed packages."
@@ -87,7 +88,7 @@ use `pt/package-archives-copy' if USE-COPY is true."
   (pt/suspend-delete
    (lambda ()
      (pt/cask-up
-      (cask-update)))))
+      (lambda () (cask-update))))))
 
 (defun pt/suspend-delete (body)
   "Suspend delete during execution of BODY."
@@ -170,14 +171,14 @@ use `pt/package-archives-copy' if USE-COPY is true."
 (defun pt/pallet-pack-one (package-name)
   "Add PACKAGE-NAME to the Caskfile."
   (pt/cask-up
-   (progn
+   (lambda ()
      (cask-add-dependency (format "%s" package-name))
      (pt/pallet-ship package-archives (pt/pallet-pick-cask)))))
 
 (defun pt/pallet-unpack-one (package-name)
   "Remove a PACKAGE-NAME from the Caskfile."
   (pt/cask-up
-   (progn
+   (lambda ()
      (pt/pallet-ship package-archives
 		     (pt/pallet-pick-cask-except (intern package-name))))))
 

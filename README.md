@@ -8,11 +8,61 @@ It uses rejeep's excellent
 [Cask](https://github.com/rejeep/cask.el) as a platform to keep
 track of your installed packages.
 
-You can install it, via [Melpa](http://melpa.milkbox.net), using
-`list-packages`. Use it by adding ```(require 'pallet)``` to your
-`init.el` or `.emacs` file. You should add the line *before* you
-require other packages; it will run `(package initialize)` for you,
-and add the package archives listed in your Cask file.
+##Installation
+
+To install Pallet, you should first install Cask, following the
+instructions [here](https://github.com/rejeep/cask.el). At present,
+just install Cask -- don't add anything to your .emacs or init.el file.
+
+After installing Cask, there are two ways you can go, depending on
+your situation:
+
+1. **I have a working Emacs install, with packages already installed,
+   and can access [MELPA](http://melpa.milbox.org).**
+
+In this case run `M-x list-packages`, and install Pallet. Then, below
+the lines which initialize your package system, add `(require
+'pallet)`.
+
+Restart Emacs, and run `pallet-init`. Now you have a Cask file in your
+emacs.d directory which contains listings for all files you've
+previously installed via `package-install`, and your .emacs.d/elpa
+directory has been replicated under .emacs.d/.cask/.
+
+You can if you wish now delete your .emacs.d/elpa directory, and go to
+step 3.
+
+2. **I have a newly installed Emacs and/or am not set up to use
+   package-install.**
+
+In this case, create a file called `Cask` in your emacs.d
+directory. Add the following lines to it:
+
+```lisp
+(source melpa)
+
+(depends-on "pallet")
+```
+
+Then, in terminal and in your emacs.d directory, run
+
+```
+cask install
+```
+
+This will create a `.cask` directory inside your .emacs.d directory and
+initialize a package directory under .emacs.d/.cask/.
+
+3. If you have any package initialization lines in your init.el file,
+   you can delete them. To replace those lines, add:
+
+```lisp
+(require 'cask "~/.cask/cask.el")
+(cask-initialize)
+```
+
+Retain any `require` statements below.
+
 
 ##What problem does Pallet solve?
 
@@ -59,29 +109,19 @@ install packages. Pallet lets you do exactly this.
 
 ##How does it work?
 
-First, you need to install Pallet (via Melpa being the easiest way),
-and `(require 'pallet)` in your Emacs initialisation file.
+First, you need to install Pallet (see above).
 
 `M-x pallet-init` will look at your installed packages and source
 archives and create a valid Cask file in your Emacs directory. You
 now no longer need to keep your `/elpa` directory under version
-control; simply keep your Cask file under version control, and use
-Cask to keep your packages synchronised across Emacs installs.
-
-Pallet will update your Cask file when you add or delete packages via
-`list-packages`, or when you run `M-x pallet-repack`.  You can install
-your Cask-managed packages using `pallet-install`, and update them
-using `pallet-update`. These commands are just interactive aliases of
-the relevant Cask functions.
+control (in fact, you can delete it as Cask will now manage your
+packages for you); simply keep your Cask file under version control, and use
+Cask and Pallet to keep your packages synchronised across Emacs
+installs. Pallet will update your Cask file when you add or delete packages via
+`list-packages`.
 
 ##Alternatives
 
 [el-get](https://github.com/dimitri/el-get) is a popular and
 feature-packed project which does much more than Pallet. Pallet just
 tries to do one simple thing well enough.
-
-##What's coming?
-
-More configurability, maybe package versioning and rollbacks,
-dependency awareness ... tell me what you need, or, better,
-contribute.

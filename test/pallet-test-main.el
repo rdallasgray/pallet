@@ -4,11 +4,11 @@
   (setq pt-test/test-path (expand-file-name "." current-directory))
   (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
 
-(defvar cask-setup-run nil)
+(defvar cask-initialize-run nil)
 (defvar cask-source-mapping
   '((melpa . "http://melpa.milkbox.net/packages/")))
-(defun cask-setup (dir)
-  (setq cask-setup-run t))
+(defun cask-initialize ()
+  (setq cask-initialize-run t))
 (provide 'cask)
 
 (add-to-list 'load-path pt-test/root-path)
@@ -83,7 +83,7 @@
 (ert-deftest pt-test/cask-up-on-load ()
   "it should run pt/cask-up on load."
   (run-hooks 'after-init-hook)
-  (should (equal cask-setup-run t)))
+  (should (equal cask-initialize-run t)))
 
 (ert-deftest pt-test/pack-on-install ()
   "it should pack a package when installed."
@@ -123,7 +123,7 @@
                        (setq cask-add-dependency-called t))
            (pt/write-file (file contents)
                           (setq file-contents contents))
-           (pt/cask-up))
+           (pt/cask-up (body) (funcall body)))
       (package-install "test-package")
       (should (eq cask-add-dependency-called t)))))
 
@@ -136,7 +136,7 @@
     (flet ((package-delete (package version))
            (pt/write-file (file contents)
                           (setq file-contents contents))
-           (pt/cask-up))
+           (pt/cask-up (body) (funcall body)))
       (package-delete "yasnippet" nil)
       (should (string-match "yaml-mode" file-contents))
       (should-not (string-match "yasnippet" file-contents)))))

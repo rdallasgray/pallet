@@ -50,8 +50,9 @@ Then, in terminal and in your emacs.d directory, run
 cask install
 ```
 
-This will create a `.cask` directory inside your .emacs.d directory and
-initialize a package directory under .emacs.d/.cask/.
+This will create a `.cask` directory inside your .emacs.d directory,
+initialize a package directory under .emacs.d/.cask/, and install
+Pallet to it.
 
 3. If you have any package initialization lines in your init.el file,
    you can delete them. To replace those lines, add:

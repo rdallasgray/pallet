@@ -30,6 +30,12 @@
                [(20130218 2229)
                 nil "Yet another snippet extension for Emacs. [source: github]"])))
 
+(defun mock-upgrade-alist ()
+  (append '((yasnippet .
+               [(20130123 2111)
+                nil "Yet another snippet extension for Emacs. [source: github]"]))
+          (mock-package-alist)))
+
 (defun mock-archive-alist ()
   '((melpa . "http://melpa.milkbox.net/packages/")
     (unknown . "http://example.com")))
@@ -46,6 +52,19 @@
   '([cl-struct-cask-dependency yasnippet nil]
     [cl-struct-cask-dependency yaml-mode nil]
     [cl-struct-cask-dependency wgrep-ack nil]))
+
+(ert-deftest pt-test/installed-p ()
+  "it should accept any valid package designator"
+  (let ((package-alist (mock-package-alist)))
+    (should (equal t (pt/installed-p :yasnippet)))
+    (should (equal t (pt/installed-p 'yasnippet)))
+    (should (equal t (pt/installed-p "yasnippet")))
+
+    (should (equal nil (pt/installed-p :foo)))
+    (should (equal nil (pt/installed-p 'foo)))
+    (should (equal nil (pt/installed-p "foo")))
+
+    (should-error (pt/installed-p 42))))
 
 (ert-deftest pt-test/pallet-pick-packages ()
   "it should get a list of package name strings from package-alist"
@@ -110,6 +129,26 @@
            (cask-update nil))
       (pallet-update)
       (should (equal suspended t)))))
+
+(ert-deftest pt-test/no-delete-on-upgrade ()
+  "it should suspend deletes on update."
+  (let ((package-alist (mock-upgrade-alist))
+        (caskfile (mock-caskfile))
+        (cask-runtime-dependencies (mock-cask-dependencies))
+        (package-archives (mock-archive-alist))
+        (file-contents ""))
+    (flet ((package-delete (name version)
+                           (setq package-alist
+                                 (if (and (string= name "yasnippet")
+                                          (string= version "20130123.2111"))
+                                     (mock-package-alist)
+                                   package-alist)))
+           (pt/write-file (file contents)
+                          (setq file-contents contents))
+           (pt/cask-up (body) (funcall body)))
+     (package-delete "yasnippet" "20130123.2111")
+     (pallet-repack)
+     (should (string-match "yasnippet" file-contents)))))
 
 (ert-deftest pt-test/pack-one ()
   "it should add a package definition to the Cask file."

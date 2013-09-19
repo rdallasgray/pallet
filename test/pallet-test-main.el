@@ -9,6 +9,7 @@
   '((melpa . "http://melpa.milkbox.net/packages/")))
 (defun cask-initialize ()
   (setq cask-initialize-run t))
+(defun epl-package-installed-p (package-name) t)
 (provide 'cask)
 
 (add-to-list 'load-path pt-test/root-path)
@@ -54,17 +55,11 @@
     [cl-struct-cask-dependency wgrep-ack nil]))
 
 (ert-deftest pt-test/installed-p ()
-  "it should accept any valid package designator"
-  (let ((package-alist (mock-package-alist)))
-    (should (equal t (pt/installed-p :yasnippet)))
-    (should (equal t (pt/installed-p 'yasnippet)))
-    (should (equal t (pt/installed-p "yasnippet")))
-
-    (should (equal nil (pt/installed-p :foo)))
-    (should (equal nil (pt/installed-p 'foo)))
-    (should (equal nil (pt/installed-p "foo")))
-
-    (should-error (pt/installed-p 42))))
+  "it should return whether a package is installed"
+  (flet ((epl-package-installed-p (package-name) t))
+    (should (equal t (pt/installed-p "yasnippet"))))
+  (flet ((epl-package-installed-p (package-name) nil))
+    (should (equal nil (pt/installed-p "yasnippet")))))
 
 (ert-deftest pt-test/pallet-pick-packages ()
   "it should get a list of package name strings from package-alist"
@@ -118,9 +113,20 @@
   (let ((unpacked nil) (pallet-unpack-on-delete t))
     (flet ((pt/pallet-unpack-one (package)
                                  (setq unpacked package))
+           (pt/installed-p (package-name) nil)
            (package-delete (name version)))
       (package-delete "test-package" "012")
       (should (equal unpacked "test-package")))))
+
+(ert-deftest pt-test/unpack-on-delete ()
+  "it shouldn't unpack an installed package on delete."
+  (let ((unpacked nil) (pallet-unpack-on-delete t))
+    (flet ((pt/pallet-unpack-one (package)
+                                 (setq unpacked package))
+           (package-delete (name version))
+           (pt/installed-p (package-name) t))
+      (package-delete "test-package" "012")
+      (should (equal unpacked nil)))))
 
 (ert-deftest pt-test/suspend-delete-on-update ()
   "it should suspend deletes on update."
@@ -129,26 +135,6 @@
            (cask-update nil))
       (pallet-update)
       (should (equal suspended t)))))
-
-(ert-deftest pt-test/no-delete-on-upgrade ()
-  "it should suspend deletes on update."
-  (let ((package-alist (mock-upgrade-alist))
-        (caskfile (mock-caskfile))
-        (cask-runtime-dependencies (mock-cask-dependencies))
-        (package-archives (mock-archive-alist))
-        (file-contents ""))
-    (flet ((package-delete (name version)
-                           (setq package-alist
-                                 (if (and (string= name "yasnippet")
-                                          (string= version "20130123.2111"))
-                                     (mock-package-alist)
-                                   package-alist)))
-           (pt/write-file (file contents)
-                          (setq file-contents contents))
-           (pt/cask-up (body) (funcall body)))
-     (package-delete "yasnippet" "20130123.2111")
-     (pallet-repack)
-     (should (string-match "yasnippet" file-contents)))))
 
 (ert-deftest pt-test/pack-one ()
   "it should add a package definition to the Cask file."
@@ -173,6 +159,7 @@
         (package-archives (mock-archive-alist))
         (file-contents ""))
     (flet ((package-delete (package version))
+           (pt/installed-p (package-name) nil)
            (pt/write-file (file contents)
                           (setq file-contents contents))
            (pt/cask-up (body) (funcall body)))

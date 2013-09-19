@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.3.4
+;; Version: 0.3.5
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -264,19 +264,14 @@ use `pt/package-archives-copy' if USE-COPY is true."
   (when pallet-pack-on-install (pt/pallet-pack-one package-name)))
 
 (defun pt/installed-p (package-name)
-  "Returns t if PACKAGE-NAME is installed. It can be a string,
-  symbol or keyword designating a package name."
-  (package-installed-p (intern (etypecase package-name
-                                (string package-name)
-                                (keyword (substring (symbol-name package-name) 1))
-                                (symbol (symbol-name package-name))))))
+  "Whether (string) PACKAGE-NAME is installed."
+  (pt/cask-up
+   (lambda () (epl-package-installed-p (intern package-name)))))
 
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is true and
-delete is not due to an upgrade."
+  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is t, and the
+package is no longer installed."
   (when (and pallet-unpack-on-delete
-             ;; Need to guard against upgrades, which are done as
-             ;; install followed by delete.
              (not (pt/installed-p package-name)))
     (pt/pallet-unpack-one package-name)))
 

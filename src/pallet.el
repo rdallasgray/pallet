@@ -33,6 +33,8 @@
 ;;
 ;;; Code:
 
+;; We need to get a copy of the package-archives alist
+;; before requiring Cask, as doing so will empty the list.
 (package-initialize)
 
 (defvar pt/package-archives-copy
@@ -41,39 +43,41 @@
 (require 'cask)
 
 (defgroup pallet nil
-  "Settings for the Pallet package manager.")
+  "Settings for the Pallet package management tool."
+  :group 'tools
+  :group 'package)
 
 (defcustom pallet-repack-on-close nil
-  "Whether to update the Cask file on closing Emacs."
+  "Whether to run `pallet-repack' on closing Emacs."
   :type 'boolean
   :group 'pallet)
 
 (defcustom pallet-cask-up-on-load t
-  "Whether to read the Cask file on loading pallet."
+  "Whether to run `pt/cask-up' on loading pallet."
   :type 'boolean
   :group 'pallet)
 
 (defcustom pallet-pack-on-install t
-  "Whether to add a package to the Cask file on `package-install'."
+  "Whether to run `pt/pallet-pack-one' on `package-install'."
   :type 'boolean
   :group 'pallet)
 
 (defcustom pallet-unpack-on-delete t
-  "Whether to remove a package from the Cask file on package-delete."
+  "Whether to run `pt/pallet-unpack-one' on `package-delete'."
   :type 'boolean
   :group 'pallet)
 
 (defun pallet-init ()
-  "Bootstrap a Cask setup from Elpa details."
+  "Bootstrap a Cask setup from package.el information."
   (interactive)
   (pallet-repack t)
   (pallet-install))
 
 (defun pallet-repack (&optional use-copy)
-  "Recreate the Cask file from Elpa details;
+  "Recreate the Cask file from package.el information;
 use `pt/package-archives-copy' if USE-COPY is true."
   (let ((archive-alist
-	 (if use-copy pt/package-archives-copy package-archives)))
+         (if use-copy pt/package-archives-copy package-archives)))
     (pt/pallet-ship archive-alist (pt/pallet-pick-packages))))
 
 (defun pallet-install ()
@@ -91,17 +95,19 @@ use `pt/package-archives-copy' if USE-COPY is true."
       (lambda () (cask-update))))))
 
 (defun pt/suspend-delete (body)
-  "Suspend delete during execution of BODY."
+  "Suspend deletion of packages from the Cask file during execution of BODY.
+We want to do this e.g. whie updating packages, as this is done with an install
+followed by a delete."
   (let ((pallet-unpack-on-delete nil))
     (funcall body)))
 
 (defun pt/cask-up (&optional body)
-  "Attempt to initialize Cask, optionally running BODY."
+  "Attempt to initialize Cask, optionally running BODY if initialisation succeeds."
   (if (file-exists-p (pt/cask-file))
       (progn
-	(setq cask-runtime-dependencies '())
-	(cask-initialize)
-	(when body (funcall body)))
+        (setq cask-runtime-dependencies '())
+        (cask-initialize)
+        (when body (funcall body)))
     (message "No Cask file found. Run `pallet-init' to create one.")))
 
 (defun pt/cask-file ()
@@ -109,47 +115,49 @@ use `pt/package-archives-copy' if USE-COPY is true."
   (expand-file-name "Cask" user-emacs-directory))
 
 (defun pt/enable-repack-on-close ()
-  "Add a hook to run pallet-repack when Emacs closes."
+  "Add a hook to run `pallet-repack' when Emacs closes."
   (add-hook 'kill-emacs-hook 'pt/maybe-repack-on-close))
 
 (defun pt/enable-cask-up-on-load ()
-  "Add a hook to run pt/cask-up when Emacs has initialised."
+  "Add a hook to run `pt/cask-up' when Emacs has initialised."
   (add-hook 'after-init-hook 'pt/maybe-cask-up-on-load))
 
 (defadvice package-install (after pt/after-install (package-name) activate)
-  "Run pt/pallet-pack-one after `package-install'."
+  "Run `pt/maybe-pack-on-install' after `package-install'."
   (pt/maybe-pack-on-install package-name))
 
 (defadvice package-delete (after pt/after-delete (package-name version) activate)
-  "Run pt/pallet-unpack-one after `package-delete'."
+  "Run `pt/maybe-unpack-on-delete' after `package-delete'."
   (pt/maybe-unpack-on-delete package-name))
 
 (defun pt/maybe-repack-on-close ()
-  "Repack if pallet-repack-on-close is true."
+  "Run `pallet-repack' if `pallet-repack-on-close' is true."
   (when pallet-repack-on-close (pallet-repack)))
 
 (defun pt/maybe-cask-up-on-load ()
-  "Load the Cask file if pallet-cask-up-on-load is true."
+  "Run `pt/cask-up' if `pallet-cask-up-on-load' is true."
   (when pallet-cask-up-on-load (pt/cask-up)))
 
 (defun pt/maybe-pack-on-install (package-name)
-  "Pack PACKAGE-NAME if pallet-pack-on-install is true."
+  "Pack PACKAGE-NAME if `pallet-pack-on-install' is true."
   (when pallet-pack-on-install (pt/pallet-pack-one package-name)))
 
 (defun pt/installed-p (package-name)
-  "Whether (string) PACKAGE-NAME is installed."
+  "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."
+  ;; Ensure we have up-to-date information -- package-delete doesn't
+  ;; recreate package-alist automatically.
   (pt/cask-up
    (lambda () (epl-package-installed-p (intern package-name)))))
 
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is t, and the
+  "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the
 package is no longer installed."
   (when (and pallet-unpack-on-delete
              (not (pt/installed-p package-name)))
     (pt/pallet-unpack-one package-name)))
 
 (defun pt/pallet-pick-packages ()
-  "Get a simple list of Elpa-installed packages."
+  "Get a simple list of installed packages."
   (if package-alist
       (let ((picked '()))
         (dolist (package-details package-alist)
@@ -188,12 +196,12 @@ package is no longer installed."
   (pt/cask-up
    (lambda ()
      (pt/pallet-ship package-archives
-		     (pt/pallet-pick-cask-except (intern package-name))))))
+                     (pt/pallet-pick-cask-except (intern package-name))))))
 
 (defun pt/pallet-ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
-    (pt/write-file (pt/cask-file)
-                   (pt/pallet-pack archives packages)))
+  (pt/write-file (pt/cask-file)
+                 (pt/pallet-pack archives packages)))
 
 (defun pt/write-sources (archive-list)
   "Create a Caskfile source set from ARCHIVE-LIST."
@@ -221,6 +229,7 @@ package is no longer installed."
   (with-temp-file file
     (insert contents)))
 
+;; Add hooks
 (pt/enable-cask-up-on-load)
 (pt/enable-repack-on-close)
 

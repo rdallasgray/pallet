@@ -136,9 +136,22 @@ use `pt/package-archives-copy' if USE-COPY is true."
   "Pack PACKAGE-NAME if pallet-pack-on-install is true."
   (when pallet-pack-on-install (pt/pallet-pack-one package-name)))
 
+(defun pt/installed-p (package-name)
+  "Returns t if PACKAGE-NAME is installed. It can be a string,
+  symbol or keyword designating a package name."
+  (package-installed-p (intern (etypecase package-name
+                                (string package-name)
+                                (keyword (substring (symbol-name package-name) 1))
+                                (symbol (symbol-name package-name))))))
+
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is true."
-  (when pallet-unpack-on-delete (pt/pallet-unpack-one package-name)))
+  "Unpack PACKAGE-NAME if pallet-unpack-on-delete is true and
+delete is not due to an upgrade."
+  (when (and pallet-unpack-on-delete
+             ;; Need to guard against upgrades, which are done as
+             ;; install followed by delete.
+             (not (pt/installed-p package-name)))
+    (pt/pallet-unpack-one package-name)))
 
 (defun pt/pallet-pick-packages ()
   "Get a simple list of Elpa-installed packages."

@@ -103,16 +103,12 @@ followed by a delete."
 
 (defun pt/cask-up (&optional body)
   "Attempt to initialize Cask, optionally running BODY if initialisation succeeds."
-  (if (file-exists-p (pt/cask-file))
+  (if (file-exists-p cask-file)
       (progn
         (setq cask-runtime-dependencies '())
         (cask-initialize)
         (when body (funcall body)))
     (message "No Cask file found. Run `pallet-init' to create one.")))
-
-(defun pt/cask-file ()
-  "Location of the Cask file."
-  (expand-file-name "Cask" user-emacs-directory))
 
 (defun pt/enable-repack-on-close ()
   "Add a hook to run `pallet-repack' when Emacs closes."
@@ -200,7 +196,7 @@ package is no longer installed."
 
 (defun pt/pallet-ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
-  (pt/write-file (pt/cask-file)
+  (pt/write-file cask-file
                  (pt/pallet-pack archives packages)))
 
 (defun pt/write-sources (archive-list)

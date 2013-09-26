@@ -29,7 +29,7 @@
 
 ;;; Commentary:
 ;;
-@COMMENTARY
+;@COMMENTARY
 ;;
 ;;; Code:
 

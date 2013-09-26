@@ -150,8 +150,7 @@ followed by a delete."
    (lambda () (epl-package-installed-p (intern package-name)))))
 
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the
-package is no longer installed."
+  "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the package is no longer installed."
   (when (and pallet-unpack-on-delete
              (not (pt/installed-p package-name)))
     (pt/pallet-unpack-one package-name)))

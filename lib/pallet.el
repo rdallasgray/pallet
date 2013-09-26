@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.3.6
+;; Version: 0.3.7
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -38,6 +38,12 @@
 ;; It uses rejeep's excellent
 ;; [Cask](https://github.com/rejeep/cask.el) as a platform to keep
 ;; track of your installed packages.
+;; 
+;; ##Target platform
+;; 
+;; Pallet is well tested on Emacs 24.3.1, and should work on
+;; previous versions of Emacs 24. Emacs snapshot is at present making
+;; changes to the package system which will prevent Pallet from working correctly.
 ;; 
 ;; ##Installation
 ;; 
@@ -277,8 +283,7 @@ followed by a delete."
    (lambda () (epl-package-installed-p (intern package-name)))))
 
 (defun pt/maybe-unpack-on-delete (package-name)
-  "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the
-package is no longer installed."
+  "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the package is no longer installed."
   (when (and pallet-unpack-on-delete
              (not (pt/installed-p package-name)))
     (pt/pallet-unpack-one package-name)))

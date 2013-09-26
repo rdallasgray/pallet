@@ -8,6 +8,12 @@ It uses rejeep's excellent
 [Cask](https://github.com/rejeep/cask.el) as a platform to keep
 track of your installed packages.
 
+##Target platform
+
+Pallet is well tested on Emacs 24.3.1, and should work on
+previous versions of Emacs 24. Emacs snapshot is at present making
+changes to the package system which will prevent Pallet from working correctly.
+
 ##Installation
 
 To install Pallet, you should first install Cask, following the

@@ -122,13 +122,13 @@ followed by a delete."
   "Add a hook to run `pt/cask-up' when Emacs has initialised."
   (add-hook 'after-init-hook 'pt/maybe-cask-up-on-load))
 
-(defadvice package-install (after pt/after-install (package-name) activate)
+(defadvice package-install (after pt/after-install (pkg) activate)
   "Run `pt/maybe-pack-on-install' after `package-install'."
-  (pt/maybe-pack-on-install package-name))
+  (pt/maybe-pack-on-install pkg))
 
-(defadvice package-delete (after pt/after-delete (package-name version) activate)
+(defadvice package-delete (after pt/after-delete (pkg-desc) activate)
   "Run `pt/maybe-unpack-on-delete' after `package-delete'."
-  (pt/maybe-unpack-on-delete package-name))
+    (pt/maybe-unpack-on-delete (package-desc-name pkg-desc)))
 
 (defun pt/maybe-repack-on-close ()
   "Run `pallet-repack' if `pallet-repack-on-close' is true."
@@ -138,22 +138,17 @@ followed by a delete."
   "Run `pt/cask-up' if `pallet-cask-up-on-load' is true."
   (when pallet-cask-up-on-load (pt/cask-up)))
 
-(defun pt/maybe-pack-on-install (package-name)
-  "Pack PACKAGE-NAME if `pallet-pack-on-install' is true."
-  (when pallet-pack-on-install (pt/pallet-pack-one package-name)))
-
-(defun pt/installed-p (package-name)
-  "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."
-  ;; Ensure we have up-to-date information -- package-delete doesn't
-  ;; recreate package-alist automatically.
-  (pt/cask-up
-   (lambda () (epl-package-installed-p (intern package-name)))))
+(defun pt/maybe-pack-on-install (pkg)
+  "Pack PKG if `pallet-pack-on-install' is true."
+  (when pallet-pack-on-install (pt/pallet-pack-one (if (package-desc-p pkg)
+                                                       (package-desc-name pkg)
+                                                     pkg))))
 
 (defun pt/maybe-unpack-on-delete (package-name)
   "Unpack PACKAGE-NAME if `pallet-unpack-on-delete' is t, and the
 package is no longer installed."
   (when (and pallet-unpack-on-delete
-             (not (pt/installed-p package-name)))
+             (not (epl-package-installed-p package-name)))
     (pt/pallet-unpack-one package-name)))
 
 (defun pt/pallet-pick-packages ()
@@ -196,7 +191,7 @@ package is no longer installed."
   (pt/cask-up
    (lambda ()
      (pt/pallet-ship package-archives
-                     (pt/pallet-pick-cask-except (intern package-name))))))
+                     (pt/pallet-pick-cask-except package-name)))))
 
 (defun pt/pallet-ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."

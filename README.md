@@ -62,7 +62,7 @@ your situation:
 
 **Finally**, if you have any package initialization lines in your init.el
 (e.g., adding archives to `package-archive`, or running `package-initialize`),
-you can delete them. To replace those lines, add:
+you can delete them. Add the following lines:
 
 ```lisp
 (require 'cask "~/.cask/cask.el")

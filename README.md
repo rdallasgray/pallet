@@ -15,8 +15,8 @@ changes to the package system which will prevent Pallet from working correctly.
 ##Installation
 
 To install Pallet, you should first install Cask, following the
-instructions [here](https://github.com/rejeep/cask.el). At present,
-just install Cask -- don't add anything to your .emacs or init.el file.
+instructions [here](https://github.com/rejeep/cask.el). **At present,
+just install Cask -- don't add anything to your .emacs or init.el file**.
 
 After installing Cask, there are two ways you can go, depending on
 your situation:
@@ -62,7 +62,7 @@ your situation:
    initialize a package directory under .emacs.d/.cask/, and install
    Pallet to it.
 
-**Finally, add the following lines to your init.el, before any
+**Finally, make sure the following lines are in your init.el, before any
   packages are required:**
 
 ```lisp

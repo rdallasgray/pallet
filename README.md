@@ -38,7 +38,7 @@ your situation:
 
    You can if you wish now delete your .emacs.d/elpa directory, and
    remove any lines from your init.el adding archives to
-   `package-archive`, or running `package-initialize`).
+   `package-archive`, or running `package-initialize`.
 
 2. **I have a newly installed Emacs and/or am not set up to use
    package-install.**

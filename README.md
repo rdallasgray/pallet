@@ -1,7 +1,5 @@
 #Pallet
 
-##tl;dr
-
 Pallet is a simple package-management system for Emacs.
 
 It uses rejeep's excellent
@@ -26,17 +24,23 @@ your situation:
 1. **I have a working Emacs install, with packages already installed,
    and can access [MELPA](http://melpa.milbox.org).**
 
-   In this case run `M-x list-packages`, and install Pallet. Then, below
-   the lines which initialize your package system, add `(require
-   'pallet)`.
+   In this case run `M-x list-packages`, and install Pallet.
+   
+   Add the following lines to your your init.el:
+   
+   ```lisp
+   (require 'cask "~/.cask/cask.el")
+   (cask-initialize)
+   
+   (require 'pallet)
+   ```
 
    Restart Emacs, and run `pallet-init`. Now you have a Cask file in your
    emacs.d directory which contains listings for all files you've
    previously installed via `package-install`, and your .emacs.d/elpa
    directory has been replicated under .emacs.d/.cask/.
 
-   You can if you wish now delete your .emacs.d/elpa directory, and go to
-   step 3.
+   You can if you wish now delete your .emacs.d/elpa directory.
 
 2. **I have a newly installed Emacs and/or am not set up to use
    package-install.**
@@ -53,19 +57,21 @@ your situation:
    Then, in terminal and in your emacs.d directory, run
 
    ```
-   cask install
+   $ cask install
    ```
 
    This will create a `.cask` directory inside your .emacs.d directory,
    initialize a package directory under .emacs.d/.cask/, and install
    Pallet to it.
-
-3. If you have any package initialization lines in your init.el file,
+   
+   If you have any package initialization lines in your init.el file,
    you can delete them. To replace those lines, add:
 
    ```lisp
    (require 'cask "~/.cask/cask.el")
    (cask-initialize)
+   
+   (require 'pallet)
    ```
 
    Retain any `require` statements below.

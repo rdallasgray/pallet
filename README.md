@@ -36,7 +36,9 @@ your situation:
    previously installed via `package-install`, and your .emacs.d/elpa
    directory has been replicated under .emacs.d/.cask/.
 
-   You can if you wish now delete your .emacs.d/elpa directory.
+   You can if you wish now delete your .emacs.d/elpa directory, and
+   remove any lines from your init.el adding archives to
+   `package-archive`, or running `package-initialize`).
 
 2. **I have a newly installed Emacs and/or am not set up to use
    package-install.**
@@ -60,9 +62,8 @@ your situation:
    initialize a package directory under .emacs.d/.cask/, and install
    Pallet to it.
 
-**Finally**, if you have any package initialization lines in your init.el
-(e.g., adding archives to `package-archive`, or running `package-initialize`),
-you can delete them. To replace those lines, add:
+**Finally, add the following lines to your init.el, before any
+  packages are required:**
 
 ```lisp
 (require 'cask "~/.cask/cask.el")

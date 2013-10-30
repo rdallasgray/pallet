@@ -2,7 +2,7 @@
        (file-name-directory
         (if load-file-name load-file-name buffer-file-name))))
   (setq pt-test/test-path (expand-file-name "." current-directory))
-  (setq pt-test/root-path (expand-file-name "../lib" current-directory)))
+  (setq pt-test/root-path (expand-file-name ".." current-directory)))
 
 (defvar cask-initialize-run nil)
 (defvar cask-source-mapping

@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.3.12
+;; Version: 0.3.19
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -31,9 +31,7 @@
 ;;
 ;; #Pallet
 ;; 
-;; ##tl;dr
-;; 
-;; Pallet is a simple package-management system for Emacs.
+;; Pallet is a package-management tool for Emacs.
 ;; 
 ;; It uses rejeep's excellent
 ;; [Cask](https://github.com/rejeep/cask.el) as a platform to keep
@@ -48,8 +46,8 @@
 ;; ##Installation
 ;; 
 ;; To install Pallet, you should first install Cask, following the
-;; instructions [here](https://github.com/rejeep/cask.el). At present,
-;; just install Cask -- don't add anything to your .emacs or init.el file.
+;; instructions [here](https://github.com/rejeep/cask.el). **At present,
+;; just install Cask -- don't add anything to your .emacs or init.el file**.
 ;; 
 ;; After installing Cask, there are two ways you can go, depending on
 ;; your situation:
@@ -58,16 +56,20 @@
 ;;    and can access [MELPA](http://melpa.milbox.org).**
 ;; 
 ;;    In this case run `M-x list-packages`, and install Pallet. Then, below
-;;    the lines which initialize your package system, add `(require
-;;    'pallet)`.
+;;    the lines which initialize your package system, add:
+;; 
+;;    ```lisp
+;;    (require 'pallet)
+;;    ```
 ;; 
 ;;    Restart Emacs, and run `pallet-init`. Now you have a Cask file in your
 ;;    emacs.d directory which contains listings for all files you've
 ;;    previously installed via `package-install`, and your .emacs.d/elpa
 ;;    directory has been replicated under .emacs.d/.cask/.
 ;; 
-;;    You can if you wish now delete your .emacs.d/elpa directory, and go to
-;;    step 3.
+;;    You can if you wish now delete your .emacs.d/elpa directory, and
+;;    remove any lines from your init.el adding archives to
+;;    `package-archive`, or running `package-initialize`.
 ;; 
 ;; 2. **I have a newly installed Emacs and/or am not set up to use
 ;;    package-install.**
@@ -91,16 +93,14 @@
 ;;    initialize a package directory under .emacs.d/.cask/, and install
 ;;    Pallet to it.
 ;; 
-;; 3. If you have any package initialization lines in your init.el file,
-;;    you can delete them. To replace those lines, add:
+;; **Finally, make sure the following lines are in your init.el, before any
+;;   packages are required:**
 ;; 
-;;    ```lisp
-;;    (require 'cask "~/.cask/cask.el")
-;;    (cask-initialize)
-;;    ```
-;; 
-;;    Retain any `require` statements below.
-;; 
+;; ```lisp
+;; (require 'cask "~/.cask/cask.el")
+;; (cask-initialize)
+;; (require 'pallet)
+;; ```
 ;; 
 ;; ##What problem does Pallet solve?
 ;; 

@@ -1,57 +1,40 @@
-(let ((current-directory
-       (file-name-directory
-        (if load-file-name load-file-name buffer-file-name))))
-  (setq pt-test/test-path (expand-file-name "." current-directory))
-  (setq pt-test/root-path (expand-file-name ".." current-directory)))
+(let ((current-directory (file-name-directory load-file-name)))
+  (setq pallet-test-test-path (f-expand "." current-directory)
+        pallet-test-root-path (f-expand ".." current-directory)
+        pallet-test-pkg-path (f-expand "packages" pallet-test-test-path)
+        pallet-test-sandbox-path (f-expand "sandbox" pallet-test-test-path)))
 
-(add-to-list 'load-path pt-test/root-path)
+(add-to-list 'load-path pallet-test-root-path)
+
 (if (featurep 'pallet)
     (unload-feature 'pallet t))
+
 (require 'pallet)
-
-(defvar cask-initialize-run nil)
-(defvar cask-source-mapping
-  '((melpa . "http://melpa.milkbox.net/packages/")))
-(defun cask-initialize ()
-  (setq cask-initialize-run t))
-(defun epl-package-installed-p (package-name) t)
-(provide 'cask)
-
-(require 'cl)
 (require 'el-mock)
+(require 'cl)
+(require 'package)
 
-(defun mock-package-alist ()
-  '((wgrep-ack .
-               [(20121201 2230)
-                ((wgrep
-                  (2 1 1)))
-                "Writable ack-and-a-half buffer and apply the changes to files [source: github]"])
-    (yaml-mode .
-               [(20120901 1329)
-                nil "Major mode for editing YAML files [source: github]"])
-    (yasnippet .
-               [(20130218 2229)
-                nil "Yet another snippet extension for Emacs. [source: github]"])))
+(defun pallet-test-package-file (file-name)
+  "Easily get a mock package file by name."
+  (f-expand file-name pallet-test-pkg-path))
 
-(defun mock-upgrade-alist ()
-  (append '((yasnippet .
-               [(20130123 2111)
-                nil "Yet another snippet extension for Emacs. [source: github]"]))
-          (mock-package-alist)))
+(defun pallet-test-do-package-delete (name version)
+  "Run package delete in 24.3.1 or 24.3.5 environments."
+    (if (fboundp 'package-desc-create)
+        (package-delete (package-desc-create :name name :version version))
+      (package-delete name version)))
 
-(defun mock-archive-alist ()
-  '((melpa . "http://melpa.milkbox.net/packages/")
-    (unknown . "http://example.com")))
+(defmacro pallet-test-with-sandbox (&rest body)
+  "Clean the sandbox, run body."
+  `(let ((default-directory ,pallet-test-sandbox-path)
+         (user-emacs-directory ,pallet-test-sandbox-path)
+         (package-user-dir ,(f-expand "elpa" pallet-test-sandbox-path)))
+     (progn
+       (pallet-test-cleanup-sandbox)
+       ,@body)))
 
-(defun mock-caskfile () nil
-  (concat "(source \"unknown\" \"http://example.com\")\n"
-          "(source melpa)\n\n"
-          "(depends-on \"wgrep-ack\")\n(depends-on \"yaml-mode\")\n(depends-on \"yasnippet\")"))
-
-(defun mock-package-list ()
-  '("wgrep-ack" "yaml-mode" "yasnippet"))
-
-(defun mock-cask-dependencies ()
-  '([cl-struct-cask-dependency yasnippet nil]
-    [cl-struct-cask-dependency yaml-mode nil]
-    [cl-struct-cask-dependency wgrep-ack nil]))
+(defun pallet-test-cleanup-sandbox ()
+  "Clean the sandbox."
+  (f-entries pallet-test-sandbox-path
+             (lambda (entry)
+               (f-delete entry t))))

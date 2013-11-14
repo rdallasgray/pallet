@@ -1,126 +1,116 @@
-(ert-deftest pt-test/installed-p ()
-  "it should return whether a package is installed"
+;; getting installed package names from the existing package.el setup
+
+(ert-deftest pallet-test-pick-packages ()
+  "it should pick a list of installed package names"
+  (pallet-test-with-sandbox
+   (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+   (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
+   (should (equal (-difference (pallet--pick-packages)
+                               '("package-one" "package-two")) nil))))
+
+
+;; writing a correct Cask file
+
+(ert-deftest pallet-test-write-sources ()
+  "it should write Cask-formatted sources"
+  (let* ((sources '(("example" . "http://example.com/packages/")
+                    ("gnu" . "http://elpa.gnu.org/packages/")))
+         (cask-sources (pallet--write-sources sources)))
+    (should (and
+             (s-contains?
+              "(source gnu)" cask-sources)
+             (s-contains?
+              "(source \"example\" \"http://example.com/packages/\")" cask-sources)))))
+
+(ert-deftest pallet-test-write-depends ()
+  "it should write Cask-formatted dependencies"
+  (let* ((depends '("package-one" "package-two"))
+         (cask-depends (pallet--write-depends depends)))
+    (should (and
+             (s-contains?
+              "(depends-on \"package-one\")" cask-depends)
+             (s-contains?
+              "(depends-on \"package-two\")" cask-depends)))))
+
+
+;; initialising Cask
+
+(ert-deftest pallet-test-cask-up-on-load ()
+  "it should clear Cask runtime dependencies and initialize Cask on load"
   (with-mock
-   (stub epl-package-installed-p => t)
-   (should (equal t (pt/installed-p "yasnippet")))
-   (stub epl-package-installed-p => nil)
-   (should (equal nil (pt/installed-p "yasnippet")))))
+   (mock (cask-initialize))
+   (run-hooks 'after-init-hook)
+   (should (equal cask-runtime-dependencies nil))))
 
-(ert-deftest pt-test/pallet-pick-packages ()
-  "it should get a list of package name strings from package-alist"
-  (let ((package-alist (mock-package-alist)))
-    (should (equal (pt/pallet-pick-packages) (mock-package-list)))))
+(ert-deftest pallet-test-init ()
+  "it should write a Cask file on pallet-init"
+  (pallet-test-with-sandbox
+   (with-mock
+    (stub pallet-install)
+    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (pallet-init)
+    (should (s-contains? "(depends-on \"package-one\")"
+                         (f-read-text (pallet--cask-file)))))))
 
-(ert-deftest pt-test/pallet-pack ()
-  "it should construct a valid caskfile from pt/pallet-pick-packages"
-  (let ((package-archives (mock-archive-alist))
-        (package-alist (mock-package-alist)))
-    (should (equal
-             (pt/pallet-pack package-archives (pt/pallet-pick-packages)) (mock-caskfile)))))
 
-(ert-deftest pt-test/pallet-repack ()
-  "it should write a Caskfile to the user's emacs directory based on package-alist"
-  (let ((package-archives (mock-archive-alist))
-        (package-alist (mock-package-alist))
-        (file-path "")
-        (file-contents ""))
-    (flet ((pt/write-file (file contents)
-                          (setq file-path file)
-                          (setq file-contents contents)))
-      (pallet-repack)
-      (should (equal file-path (expand-file-name "Cask" user-emacs-directory)))
-      (should (equal file-contents (mock-caskfile))))))
+;; advising package.el functions to add to and delete from the Cask file
 
-(ert-deftest pt-test/repack-on-close ()
-  "it should run pt/pallet-repack on close."
-  (let ((repacked nil) (pallet-repack-on-close t))
-    (flet ((pallet-repack ()
-                           (setq repacked t)))
-      (run-hooks 'kill-emacs-hook)
-      (should (equal repacked t)))))
+(ert-deftest pallet-test-pack-on-install ()
+  "it should add a package to the Cask file on package-install"
+  (pallet-test-with-sandbox
+   (with-mock
+    (stub pallet-install)
+    (pallet-init)
+    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (should (s-contains? "(depends-on \"package-one\")"
+                         (f-read-text (pallet--cask-file)))))))
 
-(ert-deftest pt-test/cask-up-on-load ()
-  "it should run pt/cask-up on load."
-  (run-hooks 'after-init-hook)
-  (should (equal cask-initialize-run t)))
+(ert-deftest pallet-test-unpack-on-delete ()
+  "it should remove a package from the Cask file on package-delete"
+  (pallet-test-with-sandbox
+   (with-mock
+    (stub pallet-install)
+    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
+    (pallet-init)
+    (pallet-test-do-package-delete "package-one" "0.0.1")
+    (should (s-contains? "(depends-on \"package-two\")"
+                         (f-read-text (pallet--cask-file))))
+    (should (not (s-contains? "(depends-on \"package-one\")"
+                              (f-read-text (pallet--cask-file))))))))
 
-(ert-deftest pt-test/pack-on-install ()
-  "it should pack a package when installed."
-  (let ((packed nil) (pallet-pack-on-install t))
-    (flet ((pt/pallet-pack-one (package)
-                               (setq packed package))
-           (package-install (name)))
-      (package-install "test-package")
-      (should (equal packed "test-package")))))
 
-(ert-deftest pt-test/unpack-on-delete ()
-  "it should unpack a package on delete."
-  (let ((unpacked nil) (pallet-unpack-on-delete t))
-    (flet ((pt/pallet-unpack-one (package)
-                                 (setq unpacked package))
-           (pt/installed-p (package-name) nil)
-           (package-delete (name version)))
-      (package-delete "test-package" "012")
-      (should (equal unpacked "test-package")))))
+;; handling upgrades (which are composed of an install then a delete)
 
-(ert-deftest pt-test/unpack-on-delete ()
+(ert-deftest pallet-test-delete-installed-package ()
   "it shouldn't unpack an installed package on delete."
-  (let ((unpacked nil) (pallet-unpack-on-delete t))
-    (flet ((pt/pallet-unpack-one (package)
-                                 (setq unpacked package))
-           (package-delete (name version))
-           (pt/installed-p (package-name) t))
-      (package-delete "test-package" "012")
-      (should (equal unpacked nil)))))
+  (pallet-test-with-sandbox
+   (with-mock
+    (stub pallet-install)
+    (stub pallet--installed-p => t)
+    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
+    (package-install-file (pallet-test-package-file "package-two-0.0.2.el"))
+    (pallet-init)
+    (pallet-test-do-package-delete "package-two" "0.0.1")
+    (should (s-contains? "(depends-on \"package-one\")"
+                         (f-read-text (pallet--cask-file))))
+    (should (s-contains? "(depends-on \"package-two\")"
+                         (f-read-text (pallet--cask-file)))))))
 
-(ert-deftest pt-test/suspend-delete-on-update ()
-  "it should suspend deletes on update."
-  (let ((suspended nil))
-    (flet ((pt/suspend-delete (body) (setq suspended t))
-           (cask-update nil))
-      (pallet-update)
-      (should (equal suspended t)))))
 
-(ert-deftest pt-test/pack-one ()
-  "it should add a package definition to the Cask file."
-  (let ((caskfile (mock-caskfile))
-        (cask-runtime-dependencies (mock-cask-dependencies))
-        (package-archives (mock-archive-alist))
-        (file-contents "")
-        (cask-add-dependency-called nil))
-    (flet ((package-install (package))
-           (cask-add-dependency (arg)
-                       (setq cask-add-dependency-called t))
-           (pt/write-file (file contents)
-                          (setq file-contents contents))
-           (pt/cask-up (body) (funcall body)))
-      (package-install "test-package")
-      (should (eq cask-add-dependency-called t)))))
+;; handling 24.3.1 and 24.3.5 package.el systems
 
-(ert-deftest pt-test/unpack-one ()
-  "it should remove a package definition from the Cask file."
-  (let ((caskfile (mock-caskfile))
-        (cask-runtime-dependencies (mock-cask-dependencies))
-        (package-archives (mock-archive-alist))
-        (file-contents ""))
-    (flet ((package-delete (package version))
-           (pt/installed-p (package-name) nil)
-           (pt/write-file (file contents)
-                          (setq file-contents contents))
-           (pt/cask-up (body) (funcall body)))
-      (package-delete "yasnippet" nil)
-      (should (string-match "yaml-mode" file-contents))
-      (should-not (string-match "yasnippet" file-contents)))))
+(ert-deftest pallet-test-package-name-symbol ()
+  "it should handle a package name as a symbol"
+  (should (string= (pallet--package-name 'package-one) "package-one")))
 
-(ert-deftest pt-test/pallet-pick-cask ()
-  "it should get a list of package names from a Cask file."
-  (let ((cask-runtime-dependencies (mock-cask-dependencies)))
-    (flet ((pt/cask-up))
-      (should (equal (pt/pallet-pick-cask) (mock-package-list))))))
+(if (fboundp 'package-desc-create)
+    (ert-deftest pallet-test-package-name-desc ()
+      "it should handle a package name as a package-desc"
+      (let ((desc (package-desc-create :name "package-one" :version "0.0.1")))
+        (should (string= (pallet--package-name desc) "package-one")))))
 
-(ert-deftest pt/pallet-pick-cask-except ()
-  "it should exclude a package from a package list."
-  (let ((cask-runtime-dependencies (mock-cask-dependencies))
-        (package-list (cdr (mock-package-list))))
-    (flet ((pt/cask-up))
-      (should (equal (pt/pallet-pick-cask-except 'wgrep-ack) package-list)))))
+(ert-deftest pallet-test-package-name-string ()
+  "it should handle a package name as a string"
+  (should (string= (pallet--package-name "package-one") "package-one")))

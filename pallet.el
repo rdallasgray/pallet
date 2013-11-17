@@ -50,16 +50,8 @@
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
-  (pallet-repack t)
+  (pallet--repack t)
   (pallet-install))
-
-;;;###autoload
-(defun pallet-repack (&optional use-copy)
-  "Recreate the Cask file from package.el information;
-use `pallet--package-archives-copy' if USE-COPY is true."
-  (let ((archive-alist
-         (if use-copy pallet--package-archives-copy package-archives)))
-    (pallet--ship archive-alist (pallet--pick-packages))))
 
 ;;;###autoload
 (defun pallet-install ()
@@ -77,6 +69,13 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 
 ;;; private functions
+
+(defun pallet--repack (&optional use-copy)
+  "Recreate the Cask file from package.el information;
+use `pallet--package-archives-copy' if USE-COPY is true."
+  (let ((archive-alist
+         (if use-copy pallet--package-archives-copy package-archives)))
+    (pallet--ship archive-alist (pallet--pick-packages))))
 
 (defun pallet--cask-up (&optional body)
   "Attempt to initialize Cask, optionally running BODY if initialisation succeeds."

@@ -36,11 +36,10 @@
 ;; initialising Cask
 
 (ert-deftest pallet-test-cask-up-on-load ()
-  "it should clear Cask runtime dependencies and initialize Cask on load"
+  "it should initialize Cask on load"
   (with-mock
    (mock (cask-initialize))
-   (run-hooks 'after-init-hook)
-   (should (equal cask-runtime-dependencies nil))))
+   (run-hooks 'after-init-hook)))
 
 (ert-deftest pallet-test-init ()
   "it should write a Cask file on pallet-init"
@@ -53,6 +52,25 @@
                          (f-read-text (pallet--cask-file)))))))
 
 
+;; installing and updating packages
+
+(ert-deftest pallet-test-install ()
+  "it should install packages from the Cask file"
+  (pallet-test-with-sandbox
+   (when (package-installed-p 'ack)
+     (pallet-test-do-package-delete "ack"))
+   (pallet-test-create-cask-file "(source gnu)(depends-on \"ack\")")
+   (pallet-install)
+   (should (package-installed-p 'ack))))
+
+(ert-deftest pallet-test-update ()
+  "it should update packages in the Cask file"
+  (pallet-test-with-sandbox
+   (pallet-test-create-cask-file "(source gnu)(depends-on \"ack\")")
+   (pallet-install)
+   (pallet-update)
+   (should (package-installed-p 'ack))))
+
 ;; advising package.el functions to add to and delete from the Cask file
 
 (ert-deftest pallet-test-pack-on-install ()
@@ -60,8 +78,8 @@
   (pallet-test-with-sandbox
    (with-mock
     (stub pallet-install)
-    (pallet-init)
     (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (pallet-init)
     (should (s-contains? "(depends-on \"package-one\")"
                          (f-read-text (pallet--cask-file)))))))
 

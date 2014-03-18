@@ -41,7 +41,8 @@
   (copy-alist package-archives))
 
 
-(require 'cask)
+(require 'epl "/Users/robertdallasgray/Documents/Code/epl/epl.el")
+(require 'cask "/Users/robertdallasgray/Documents/Code/cask/cask.el")
 
 
 ;; interactive/api functions
@@ -58,15 +59,14 @@
   "Install packages from the Cask file."
   (interactive)
   (pallet--cask-up
-   (lambda () (cask-install))))
+   (lambda (bundle) (cask-install bundle))))
 
 ;;;###autoload
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
   (pallet--cask-up
-      (lambda () (cask-update))))
-
+      (lambda (bundle) (cask-update bundle))))
 
 ;;; private functions
 
@@ -80,10 +80,8 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--cask-up (&optional body)
   "Attempt to initialize Cask, optionally running BODY if initialisation succeeds."
   (if (file-exists-p (pallet--cask-file))
-      (progn
-        (setq cask-runtime-dependencies '())
-        (cask-initialize)
-        (when body (funcall body)))
+      (let ((bundle (cask-initialize)))
+        (when body (funcall body bundle)))
     (message "No Cask file found. Run `pallet-init' to create one.")))
 
 (defun pallet--cask-file ()
@@ -108,7 +106,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   ;; Ensure we have up-to-date information -- package-delete doesn't
   ;; recreate package-alist automatically.
   (pallet--cask-up
-   (lambda () (epl-package-installed-p (intern package-name)))))
+   (lambda (_) (epl-package-installed-p (intern package-name)))))
 
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
@@ -126,10 +124,12 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--pick-cask-except (excluded-package-name)
   "Get a list of dependencies from the Cask file, excluding EXCLUDED-PACKAGE-NAME."
   (let ((picked '()))
-    (dolist (package-details cask-runtime-dependencies)
-      (let ((package-name (aref package-details 1)))
-        (when (not (equal package-name excluded-package-name))
-          (push (format "%s" package-name) picked))))
+    (pallet--cask-up
+     (lambda (bundle)
+       (dolist (package-details (cask-runtime-dependencies bundle))
+         (let ((package-name (aref package-details 1)))
+           (when (not (equal package-name excluded-package-name))
+             (push (format "%s" package-name) picked))))))
     picked))
 
 (defun pallet--pack (archives packages)
@@ -141,15 +141,15 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--pack-one (package-name)
   "Add PACKAGE-NAME to the Caskfile."
   (pallet--cask-up
-   (lambda ()
-     (cask-add-dependency (format "%s" package-name))
+   (lambda (bundle)
+     (cask-add-dependency bundle (format "%s" package-name))
      (pallet--ship package-archives (pallet--pick-cask)))))
 
 (defun pallet--unpack-one (package-name)
   "Remove a PACKAGE-NAME from the Caskfile."
   (message "unpacking %s" package-name)
   (pallet--cask-up
-   (lambda ()
+   (lambda (_)
      (pallet--ship package-archives
                      (pallet--pick-cask-except (intern package-name))))))
 
@@ -197,6 +197,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
     (after pallet--after-install (package-name-or-desc) activate)
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
+    (message "installed %s" package-name)
     (pallet--pack-one package-name)))
 
 (defadvice package-delete

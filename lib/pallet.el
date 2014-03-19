@@ -112,7 +112,7 @@
 ;; 
 ;; `<path-to-cask>` will vary depending on how you installed Cask: if you
 ;; installed via the `curl` method, it is likely to be `~/.cask`; if you
-;; installed via Homebrew, it is likely to be `/usr/local/Cellar/cask/<version>/`.
+;; installed via Homebrew, it is likely to be `/usr/local/Cellar/cask/<version>`.
 ;; 
 ;; ##Contributing
 ;; Contributions to Pallet are very welcome.

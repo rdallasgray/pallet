@@ -40,9 +40,7 @@
 (defvar pallet--package-archives-copy
   (copy-alist package-archives))
 
-
-(require 'epl "/Users/robertdallasgray/Documents/Code/epl/epl.el")
-(require 'cask "/Users/robertdallasgray/Documents/Code/cask/cask.el")
+(require 'cask)
 
 
 ;; interactive/api functions

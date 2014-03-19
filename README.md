@@ -7,10 +7,9 @@ It uses @rejeep's excellent
 track of your installed packages.
 
 ##News
-Pallet version 0.5 is now available. This version introduces some
+Pallet version 0.6 is now available. This version introduces some
 breaking changes against previous versions, the most significant being
-that custom parameters have been completely removed. Pallet will now
-by default hook into installation and deletion of packages via `package.el`.
+that Pallet will *only* work with Cask v0.6 or later.
 
 ##Target platform
 

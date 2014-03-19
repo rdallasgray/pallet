@@ -18,7 +18,11 @@
   "Easily get a mock package file by name."
   (f-expand file-name pallet-test-pkg-path))
 
-(defun pallet-test-do-package-delete (name version)
+(defun pallet-test-create-cask-file (text)
+  "Create a Cask file in the sandbox containing `text'"
+  (f-write text 'utf-8 (f-expand "Cask" pallet-test-sandbox-path)))
+
+(defun pallet-test-do-package-delete (name &optional version)
   "Run package delete in 24.3.1 or 24.3.5 environments."
     (if (fboundp 'package-desc-create)
         (package-delete (package-desc-create :name name :version version))

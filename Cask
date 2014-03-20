@@ -1,6 +1,6 @@
 (source melpa)
 
-(package "pallet" "0.6.3" "A package management tool for Emacs, using Cask.")
+(package "pallet" "0.6.4" "A package management tool for Emacs, using Cask.")
 
 (depends-on "cask" "0.6")
 

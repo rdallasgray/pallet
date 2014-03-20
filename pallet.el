@@ -63,8 +63,9 @@
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
-  (pallet--cask-up
-      (lambda (bundle) (cask-update bundle))))
+  (pallet--suspend-deletes
+   (pallet--cask-up
+    (lambda (bundle) (cask-update bundle)))))
 
 ;;; private functions
 
@@ -99,12 +100,10 @@ use `pallet--package-archives-copy' if USE-COPY is true."
         (format "%s" (package-desc-name package-name-or-desc))
       nil)))
 
-(defun pallet--installed-p (package-name)
-  "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."
-  ;; Ensure we have up-to-date information -- package-delete doesn't
-  ;; recreate package-alist automatically.
-  (pallet--cask-up
-   (lambda (_) (epl-package-installed-p (intern package-name)))))
+(defun pallet--suspend-deletes (body)
+  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
+  (funcall body)
+  (ad-enable-advice 'package-delete 'after 'pallet--after-delete))
 
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
@@ -115,19 +114,17 @@ use `pallet--package-archives-copy' if USE-COPY is true."
         (reverse picked))
     nil))
 
-(defun pallet--pick-cask ()
-  "Get a list of dependencies from the Cask file."
-  (pallet--pick-cask-except nil))
+(defun pallet--pick-cask (bundle)
+  "Get a list of dependencies from the Cask BUNDLE."
+  (pallet--pick-cask-except bundle nil))
 
-(defun pallet--pick-cask-except (excluded-package-name)
-  "Get a list of dependencies from the Cask file, excluding EXCLUDED-PACKAGE-NAME."
+(defun pallet--pick-cask-except (bundle excluded-package-name)
+  "Get a list of dependencies from the Cask BUNDLE, excluding EXCLUDED-PACKAGE-NAME."
   (let ((picked '()))
-    (pallet--cask-up
-     (lambda (bundle)
-       (dolist (package-details (cask-runtime-dependencies bundle))
-         (let ((package-name (aref package-details 1)))
-           (when (not (equal package-name excluded-package-name))
-             (push (format "%s" package-name) picked))))))
+    (dolist (package-details (cask-runtime-dependencies bundle))
+      (let ((package-name (aref package-details 1)))
+        (when (not (equal package-name excluded-package-name))
+          (push (format "%s" package-name) picked))))
     picked))
 
 (defun pallet--pack (archives packages)
@@ -140,16 +137,15 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Add PACKAGE-NAME to the Caskfile."
   (pallet--cask-up
    (lambda (bundle)
-     (cask-add-dependency bundle (format "%s" package-name))
-     (pallet--ship package-archives (pallet--pick-cask)))))
+     (cask-add-dependency bundle (format "%s" package-name) :scope 'runtime)
+     (pallet--ship package-archives (pallet--pick-cask bundle)))))
 
 (defun pallet--unpack-one (package-name)
   "Remove a PACKAGE-NAME from the Caskfile."
-  (message "unpacking %s" package-name)
   (pallet--cask-up
-   (lambda (_)
+   (lambda (bundle)
      (pallet--ship package-archives
-                     (pallet--pick-cask-except (intern package-name))))))
+                     (pallet--pick-cask-except bundle (intern package-name))))))
 
 (defun pallet--ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
@@ -192,19 +188,19 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 ;; advise package.el functions
 
 (defadvice package-install
-    (after pallet--after-install (package-name-or-desc) activate)
+  (after pallet--after-install (package-name-or-desc) activate)
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
-    (message "installed %s" package-name)
+    (message "Pallet: packing %s" package-name)
     (pallet--pack-one package-name)))
 
 (defadvice package-delete
-    (after pallet--after-delete (package-name-or-desc &optional version) activate)
+  (after pallet--after-delete (package-name-or-desc &optional version) activate)
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
   (let ((package-name (pallet--package-name package-name-or-desc)))
-    (when (not (pallet--installed-p package-name))
-      (pallet--unpack-one package-name))))
+    (message "Pallet: unpacking %s" package-name)
+    (pallet--unpack-one package-name)))
 
 
 (provide 'pallet)

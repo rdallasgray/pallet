@@ -102,7 +102,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--suspend-deletes (body)
   (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
-  (funcall body)
+  (when body (funcall body))
   (ad-enable-advice 'package-delete 'after 'pallet--after-delete))
 
 (defun pallet--pick-packages ()

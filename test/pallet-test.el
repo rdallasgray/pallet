@@ -64,12 +64,14 @@
    (should (package-installed-p 'ack))))
 
 (ert-deftest pallet-test-update ()
-  "it should update packages in the Cask file"
+  "it should update packages in the Cask file without deleting them"
   (pallet-test-with-sandbox
    (pallet-test-create-cask-file "(source gnu)(depends-on \"ack\")")
    (pallet-install)
    (pallet-update)
-   (should (package-installed-p 'ack))))
+   (should (package-installed-p 'ack))
+   (should (s-contains? "(depends-on \"ack\")"
+                        (f-read-text (pallet--cask-file))))))
 
 ;; advising package.el functions to add to and delete from the Cask file
 
@@ -77,10 +79,10 @@
   "it should add a package to the Cask file on package-install"
   (pallet-test-with-sandbox
    (with-mock
-    (stub pallet-install)
-    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
+    (pallet-test-create-cask-file "(source gnu)")
     (pallet-init)
-    (should (s-contains? "(depends-on \"package-one\")"
+    (package-install 'ack)
+    (should (s-contains? "(depends-on \"ack\")"
                          (f-read-text (pallet--cask-file)))))))
 
 (ert-deftest pallet-test-unpack-on-delete ()
@@ -96,25 +98,6 @@
                          (f-read-text (pallet--cask-file))))
     (should (not (s-contains? "(depends-on \"package-one\")"
                               (f-read-text (pallet--cask-file))))))))
-
-
-;; handling upgrades (which are composed of an install then a delete)
-
-(ert-deftest pallet-test-delete-installed-package ()
-  "it shouldn't unpack an installed package on delete."
-  (pallet-test-with-sandbox
-   (with-mock
-    (stub pallet-install)
-    (stub pallet--installed-p => t)
-    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
-    (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
-    (package-install-file (pallet-test-package-file "package-two-0.0.2.el"))
-    (pallet-init)
-    (pallet-test-do-package-delete "package-two" "0.0.1")
-    (should (s-contains? "(depends-on \"package-one\")"
-                         (f-read-text (pallet--cask-file))))
-    (should (s-contains? "(depends-on \"package-two\")"
-                         (f-read-text (pallet--cask-file)))))))
 
 
 ;; handling 24.3.1 and 24.3.5 package.el systems

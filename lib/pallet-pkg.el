@@ -1,3 +1,3 @@
-(define-package "pallet" "0.6.2"
+(define-package "pallet" "0.6.0"
   "A package management tool for Emacs, using Cask."
   '((cask "0.6")))

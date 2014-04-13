@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.6.4
+;; Version: 0.6.5
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -256,7 +256,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (let ((source-list '()))
     (dolist (source archive-list)
       (push (pallet--format-source source) source-list))
-    (mapconcat 'identity source-list "\n")))
+    (mapconcat 'identity (sort source-list #'string<) "\n")))
 
 (defun pallet--format-source (source)
   "Return a string correctly formatting an archive SOURCE."

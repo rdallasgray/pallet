@@ -179,6 +179,13 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (with-temp-file file
     (insert contents)))
 
+(defun pallet--installed-p (package-name)
+  "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."
+  ;; Ensure we have up-to-date information -- package-delete doesn't
+  ;; recreate package-alist automatically.
+  (epl-initialize t)
+  (epl-package-installed-p (intern package-name)))
+
 
 ;; add hook to enable Cask init on load
 
@@ -199,8 +206,9 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
   (let ((package-name (pallet--package-name package-name-or-desc)))
-    (message "Pallet: unpacking %s" package-name)
-    (pallet--unpack-one package-name)))
+    (when (not (pallet--installed-p package-name))
+      (message "Pallet: unpacking %s" package-name)
+      (pallet--unpack-one package-name))))
 
 
 (provide 'pallet)

@@ -8,4 +8,5 @@
  (depends-on "ert-runner")
  (depends-on "el-mock")
  (depends-on "f")
- (depends-on "s"))
+ (depends-on "s")
+ (depends-on "servant"))

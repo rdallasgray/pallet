@@ -45,29 +45,38 @@
 
 ;; interactive/api functions
 
-;;;###autoload
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
-  (pallet--repack t)
-  (pallet-install))
+  (pallet--repack t))
 
-;;;###autoload
 (defun pallet-install ()
   "Install packages from the Cask file."
   (interactive)
   (pallet--cask-up
    (lambda (bundle) (cask-install bundle))))
 
-;;;###autoload
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
-  (pallet--suspend-deletes
-   (pallet--cask-up
-    (lambda (bundle) (cask-update bundle)))))
+  (pallet--cask-up
+   (lambda (bundle) (cask-update bundle))))
 
 ;;; private functions
+
+(defun pallet--on ()
+  "Add and remove entries from your Cask file on `package-install' and `package-delete'."
+  (ad-enable-advice 'package-install 'after 'pallet--after-install)
+  (ad-enable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
+
+(defun pallet--off ()
+  "Stop reacting to `package-install' and `package-delete'."
+  (ad-disable-advice 'package-install 'after 'pallet--after-install)
+  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
 
 (defun pallet--repack (&optional use-copy)
   "Recreate the Cask file from package.el information;
@@ -87,10 +96,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Location of the Cask file."
   (expand-file-name "Cask" user-emacs-directory))
 
-(defun pallet--enable-cask-up-on-load ()
-  "Add a hook to run `pallet--cask-up' when Emacs has initialised."
-  (add-hook 'after-init-hook 'pallet--cask-up))
-
 (defun pallet--package-name (package-name-or-desc)
   "Return a package name from a string or package-desc struct in PACKAGE-NAME-OR-DESC."
   (if (or (stringp package-name-or-desc)
@@ -99,11 +104,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
     (if (fboundp 'package-desc-name)
         (format "%s" (package-desc-name package-name-or-desc))
       nil)))
-
-(defun pallet--suspend-deletes (body)
-  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
-  (when body (funcall body))
-  (ad-enable-advice 'package-delete 'after 'pallet--after-delete))
 
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
@@ -125,7 +125,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (let ((package-name (aref package-details 1)))
         (when (not (equal package-name excluded-package-name))
           (push (format "%s" package-name) picked))))
-    picked))
+    (delete-dups picked)))
 
 (defun pallet--pack (archives packages)
   "Construct a Caskfile from ARCHIVES and PACKAGES."
@@ -187,22 +187,17 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (epl-package-installed-p (intern package-name)))
 
 
-;; add hook to enable Cask init on load
-
-(pallet--enable-cask-up-on-load)
-
-
 ;; advise package.el functions
 
 (defadvice package-install
-  (after pallet--after-install (package-name-or-desc) activate)
+    (after pallet--after-install (package-name-or-desc))
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
     (message "Pallet: packing %s" package-name)
     (pallet--pack-one package-name)))
 
 (defadvice package-delete
-  (after pallet--after-delete (package-name-or-desc &optional version) activate)
+  (after pallet--after-delete (package-name-or-desc &optional version))
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
   (let ((package-name (pallet--package-name package-name-or-desc)))
@@ -210,6 +205,15 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (message "Pallet: unpacking %s" package-name)
       (pallet--unpack-one package-name))))
 
+;;;###autoload
+(define-minor-mode pallet-mode
+  "Maintain entries in your Cask file automatically."
+  :init-value nil
+  :global t
+  :group 'pallet
+  (if pallet-mode
+      (pallet--on)
+    (pallet--off)))
 
 (provide 'pallet)
 

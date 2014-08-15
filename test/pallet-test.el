@@ -21,7 +21,7 @@
   "it should install packages from the Cask file"
   (pallet-test-with-sandbox
    (when (package-installed-p 'package-one)
-     (pallet-test-do-package-delete "package-one"))
+     (pallet-test-do-package-delete "package-one" '(0 0 1)))
    (pallet-test-create-cask-file-with-servant
     "(depends-on \"package-one\")")
    (pallet-install)
@@ -55,19 +55,17 @@
 (ert-deftest pallet-test-unpack-on-delete ()
   "it should remove a package from the Cask file on package-delete"
   (pallet-test-with-sandbox
-   (with-mock
-    (stub pallet-install) ;; prevent pallet reacting to package-install
-    (package-install 'package-one)
-    (package-install 'package-two)
-    (pallet-init)
-    (pallet-test-do-package-delete "package-one" "0.0.1")
-    (should (s-contains? "(depends-on \"package-two\")"
-                         (f-read-text (pallet--cask-file))))
-    (should (not (s-contains? "(depends-on \"package-one\")"
-                              (f-read-text (pallet--cask-file))))))))
+   (package-install 'package-one)
+   (package-install 'package-two)
+   (pallet-init)
+   (pallet-test-do-package-delete "package-one" '(0 0 1))
+   (should (s-contains? "(depends-on \"package-two\")"
+                        (f-read-text (pallet--cask-file))))
+   (should (not (s-contains? "(depends-on \"package-one\")"
+                             (f-read-text (pallet--cask-file)))))))
 
 
-;; handling 24.3.1 and 24.3.5 package.el systems
+;; handling 24.3  and >= 24.3.5 package.el systems
 
 (ert-deftest pallet-test-package-name-symbol ()
   "it should handle a package name as a symbol"

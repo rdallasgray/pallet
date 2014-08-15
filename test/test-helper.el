@@ -8,6 +8,8 @@
 (require 'package)
 
 (defvar pallet-test-servant-url "http://127.0.0.1:9191/packages/")
+(defvar pallet-test-servant-dir
+  (f-expand "servant/package" pallet-test-sandbox-path))
 
 (setq package-archives
       `(("servant" . ,pallet-test-servant-url)))
@@ -38,9 +40,13 @@
 
 (defun pallet-test-do-package-delete (name &optional version)
   "Run package delete in 24.3.1 or >= 24.3.5 environments."
-    (if (fboundp 'package-desc-create)
-        (package-delete (package-desc-create :name name :version version))
-      (package-delete name version)))
+  (if (fboundp 'package-desc-create)
+      (package-delete (package-desc-create
+                              :name name
+                              :version version
+                              :summary ""
+                              :dir pallet-test-servant-dir))
+    (package-delete name version)))
 
 (defmacro pallet-test-with-sandbox (&rest body)
   "Clean the sandbox, run body."

@@ -45,8 +45,14 @@
                               :name name
                               :version version
                               :summary ""
-                              :dir pallet-test-servant-dir))
+                              :dir (f-expand
+                                    (pallet-test-versioned-name name version)
+                                    package-user-dir)))
     (package-delete name version)))
+
+(defun pallet-test-versioned-name (name version)
+  "Return a versioned file name as string from string `name' and list `version'"
+  (s-concat name "-" (s-join "." (mapcar 'number-to-string version))))
 
 (defmacro pallet-test-with-sandbox (&rest body)
   "Clean the sandbox, run body."

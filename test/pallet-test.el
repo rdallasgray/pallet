@@ -85,6 +85,17 @@
     (should (s-contains? "(depends-on \"ack\")"
                          (f-read-text (pallet--cask-file)))))))
 
+(ert-deftest pallet-test-no-pack-on-duplicate-install ()
+  "it should not add a duplicate package to the Cask file on package-install"
+  (pallet-test-with-sandbox
+   (with-mock
+    (pallet-test-create-cask-file "(source gnu)")
+    (pallet-init)
+    (package-install 'ack)
+    (package-install 'ack)
+    (should-not (s-matches? "\\((depends-on \"ack\")\\)\\(.\\|\n\\)*\\1"
+                            (f-read-text (pallet--cask-file)))))))
+
 (ert-deftest pallet-test-unpack-on-delete ()
   "it should remove a package from the Cask file on package-delete"
   (pallet-test-with-sandbox

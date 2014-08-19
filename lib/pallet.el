@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.6.5
+;; Version: 0.6.6
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -224,7 +224,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (let ((package-name (aref package-details 1)))
         (when (not (equal package-name excluded-package-name))
           (push (format "%s" package-name) picked))))
-    picked))
+    (delete-dups picked)))
 
 (defun pallet--pack (archives packages)
   "Construct a Caskfile from ARCHIVES and PACKAGES."

@@ -49,8 +49,7 @@
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
-  (pallet--repack t)
-  (pallet-install))
+  (pallet--repack t))
 
 ;;;###autoload
 (defun pallet-install ()
@@ -205,12 +204,10 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (after pallet--after-delete (package-name-or-desc &optional version) activate)
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
-  ;; (let ((package-name (pallet--package-name package-name-or-desc)))
-  ;;   (when (not (pallet--installed-p package-name))
-  ;;     (message "Pallet: unpacking %s" package-name)
-  ;;     (pallet--unpack-one package-name)
-  ;;     ))
-  )
+  (let ((package-name (pallet--package-name package-name-or-desc)))
+    (when (not (pallet--installed-p package-name))
+      (message "Pallet: unpacking %s" package-name)
+      (pallet--unpack-one package-name))))
 
 
 (provide 'pallet)

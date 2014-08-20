@@ -34,7 +34,7 @@
   "Create a Cask file in the sandbox containing `text'"
   (f-write text 'utf-8 (pallet-test-cask-file)))
 
-(defun pallet-test-create-cask-file-with-servant (text)
+(defun pallet-test-create-cask-file-with-servant (&optional text)
   (pallet-test-create-cask-file
    (format "(source \"servant\" \"%s\")%s" pallet-test-servant-url text)))
 
@@ -61,6 +61,7 @@
          (package-user-dir ,(f-expand "elpa" pallet-test-sandbox-path)))
      (progn
        (pallet-test-cleanup-sandbox)
+       (pallet-test-cleanup-packages)
        ,@body)))
 
 (defun pallet-test-cleanup-sandbox ()
@@ -68,3 +69,10 @@
   (f-entries pallet-test-sandbox-path
              (lambda (entry)
                (f-delete entry t))))
+
+(defun pallet-test-cleanup-packages ()
+  "Uninstall any installed test packages"
+  (ignore-errors
+    (pallet-test-do-package-delete "package-one" '(0 0 1))
+    (pallet-test-do-package-delete "package-two" '(0 0 1))
+    (pallet-test-do-package-delete "package-two" '(0 0 2))))

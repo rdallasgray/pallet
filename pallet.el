@@ -45,20 +45,25 @@
 
 ;; interactive/api functions
 
-;;;###autoload
+(define-minor-mode pallet-mode
+  "Maintain entries in your Cask file automatically."
+  :global t
+  :group 'pallet
+  (if pallet-mode
+      (pallet--off)
+    (pallet--on)))
+
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
   (pallet--repack t))
 
-;;;###autoload
 (defun pallet-install ()
   "Install packages from the Cask file."
   (interactive)
   (pallet--cask-up
    (lambda (bundle) (cask-install bundle))))
 
-;;;###autoload
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
@@ -67,6 +72,22 @@
     (lambda (bundle) (cask-update bundle)))))
 
 ;;; private functions
+
+(defun pallet--on ()
+  "Add and remove entries from your Cask file on `package-install' and `package-delete'."
+  ;; (ad-enable-advice 'package-install 'after 'pallet--after-install)
+  ;; (ad-enable-advice 'package-delete 'after 'pallet--after-delete)
+  ;; (ad-activate 'package-install)
+  ;; (ad-activate 'package-delete)
+  )
+
+(defun pallet--off ()
+  "Stop reacting to `package-install' and `package-delete'."
+  ;; (ad-disable-advice 'package-install 'after 'pallet--after-install)
+  ;; (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
+  ;; (ad-activate 'package-install)
+  ;; (ad-activate 'package-delete)
+  )
 
 (defun pallet--repack (&optional use-copy)
   "Recreate the Cask file from package.el information;
@@ -85,10 +106,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--cask-file ()
   "Location of the Cask file."
   (expand-file-name "Cask" user-emacs-directory))
-
-(defun pallet--enable-cask-up-on-load ()
-  "Add a hook to run `pallet--cask-up' when Emacs has initialised."
-  (add-hook 'after-init-hook 'pallet--cask-up))
 
 (defun pallet--package-name (package-name-or-desc)
   "Return a package name from a string or package-desc struct in PACKAGE-NAME-OR-DESC."
@@ -186,28 +203,23 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (epl-package-installed-p (intern package-name)))
 
 
-;; add hook to enable Cask init on load
-
-(pallet--enable-cask-up-on-load)
-
-
 ;; advise package.el functions
 
-(defadvice package-install
-  (after pallet--after-install (package-name-or-desc) activate)
-  "Add a dependency to the Cask file after `package-install'."
-  (let ((package-name (pallet--package-name package-name-or-desc)))
-    (message "Pallet: packing %s" package-name)
-    (pallet--pack-one package-name)))
+;; (defadvice package-install
+;;   (after pallet--after-install (package-name-or-desc))
+;;   "Add a dependency to the Cask file after `package-install'."
+;;   (let ((package-name (pallet--package-name package-name-or-desc)))
+;;     (message "Pallet: packing %s" package-name)
+;;     (pallet--pack-one package-name)))
 
-(defadvice package-delete
-  (after pallet--after-delete (package-name-or-desc &optional version) activate)
-  "Remove a dependency from the Cask file after `package-delete'."
-  ;; NB check if package is still installed; updates trigger deletes
-  (let ((package-name (pallet--package-name package-name-or-desc)))
-    (when (not (pallet--installed-p package-name))
-      (message "Pallet: unpacking %s" package-name)
-      (pallet--unpack-one package-name))))
+;; (defadvice package-delete
+;;   (after pallet--after-delete (package-name-or-desc &optional version))
+;;   "Remove a dependency from the Cask file after `package-delete'."
+;;   ;; NB check if package is still installed; updates trigger deletes
+;;   (let ((package-name (pallet--package-name package-name-or-desc)))
+;;     (when (not (pallet--installed-p package-name))
+;;       (message "Pallet: unpacking %s" package-name)
+;;       (pallet--unpack-one package-name))))
 
 
 (provide 'pallet)

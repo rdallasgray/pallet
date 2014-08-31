@@ -1,4 +1,5 @@
 flycheck*
 .cask
 test/sandbox/*
+test/servant/*
 dist

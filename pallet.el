@@ -45,14 +45,6 @@
 
 ;; interactive/api functions
 
-(define-minor-mode pallet-mode
-  "Maintain entries in your Cask file automatically."
-  :global t
-  :group 'pallet
-  (if pallet-mode
-      (pallet--off)
-    (pallet--on)))
-
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
@@ -75,19 +67,17 @@
 
 (defun pallet--on ()
   "Add and remove entries from your Cask file on `package-install' and `package-delete'."
-  ;; (ad-enable-advice 'package-install 'after 'pallet--after-install)
-  ;; (ad-enable-advice 'package-delete 'after 'pallet--after-delete)
-  ;; (ad-activate 'package-install)
-  ;; (ad-activate 'package-delete)
-  )
+  (ad-enable-advice 'package-install 'after 'pallet--after-install)
+  (ad-enable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
 
 (defun pallet--off ()
   "Stop reacting to `package-install' and `package-delete'."
-  ;; (ad-disable-advice 'package-install 'after 'pallet--after-install)
-  ;; (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
-  ;; (ad-activate 'package-install)
-  ;; (ad-activate 'package-delete)
-  )
+  (ad-disable-advice 'package-install 'after 'pallet--after-install)
+  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
 
 (defun pallet--repack (&optional use-copy)
   "Recreate the Cask file from package.el information;
@@ -205,22 +195,31 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 ;; advise package.el functions
 
-;; (defadvice package-install
-;;   (after pallet--after-install (package-name-or-desc))
-;;   "Add a dependency to the Cask file after `package-install'."
-;;   (let ((package-name (pallet--package-name package-name-or-desc)))
-;;     (message "Pallet: packing %s" package-name)
-;;     (pallet--pack-one package-name)))
+(defadvice package-install
+    (after pallet--after-install (package-name-or-desc))
+  "Add a dependency to the Cask file after `package-install'."
+  (let ((package-name (pallet--package-name package-name-or-desc)))
+    (message "Pallet: packing %s" package-name)
+    (pallet--pack-one package-name)))
 
-;; (defadvice package-delete
-;;   (after pallet--after-delete (package-name-or-desc &optional version))
-;;   "Remove a dependency from the Cask file after `package-delete'."
-;;   ;; NB check if package is still installed; updates trigger deletes
-;;   (let ((package-name (pallet--package-name package-name-or-desc)))
-;;     (when (not (pallet--installed-p package-name))
-;;       (message "Pallet: unpacking %s" package-name)
-;;       (pallet--unpack-one package-name))))
+(defadvice package-delete
+  (after pallet--after-delete (package-name-or-desc &optional version))
+  "Remove a dependency from the Cask file after `package-delete'."
+  ;; NB check if package is still installed; updates trigger deletes
+  (let ((package-name (pallet--package-name package-name-or-desc)))
+    (when (not (pallet--installed-p package-name))
+      (message "Pallet: unpacking %s" package-name)
+      (pallet--unpack-one package-name))))
 
+;;;###autoload
+(define-minor-mode pallet-mode
+  "Maintain entries in your Cask file automatically."
+  :init-value nil
+  :global t
+  :group 'pallet
+  (if pallet-mode
+      (pallet--on)
+    (pallet--off)))
 
 (provide 'pallet)
 

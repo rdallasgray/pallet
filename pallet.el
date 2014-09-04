@@ -59,9 +59,8 @@
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
-  (pallet--suspend-deletes
-   (pallet--cask-up
-    (lambda (bundle) (cask-update bundle)))))
+  (pallet--cask-up
+   (lambda (bundle) (cask-update bundle))))
 
 ;;; private functions
 

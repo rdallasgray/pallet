@@ -1,2 +1,2 @@
 
-(1 (package-one . [(0 0 1) nil "a test package" single]) (package-two . [(0 0 1) nil "a test package" single]) (package-two . [(0 0 2) nil "a test package" single]))
+(1 (package-two . [(0 0 1) nil "desc" single]) (package-two . [(0 0 2) nil "desc" single]))

@@ -25,17 +25,14 @@
 (ert-deftest pallet-test-update ()
   "it updates packages in the Cask file"
   (pallet-test-with-sandbox
-   (package-install-file (pallet-test-package-file '(package-two (0 0 1))))
-   (message "installed: %s" package-alist)
+   (pallet-test-add-servant-package '(package-two (0 0 1)))
+   (pallet-test-create-cask-file-with-servant "(depends-on \"package-two\")")
    (pallet-mode t)
-   (pallet-init)
-   ;; REMEMBER THAT ONCE PACKAGES ARE UNDER CASK CONTROL, IT
-   ;; PUTS THEM IN ITS OWN DIRECTORY. PACKAGE.EL FUNCTIONS MAY NOT
-   ;; WORK.
-   ;; (pallet-update)
-   (message "installed: %s" package-alist)
-  ;; (should (package-installed-p 'package-two '(0 0 2)))
-   ))
+   (pallet-install)
+   (should (package-installed-p 'package-two '(0 0 1)))
+   (pallet-test-add-servant-package '(package-two (0 0 2)))
+   (pallet-update)
+   (should (package-installed-p 'package-two '(0 0 2)))))
 
 ;; advising package.el functions to add to and delete from the Cask file
 

@@ -24,6 +24,27 @@
 (require 'cl)
 (require 'package)
 
+(defvar pallet-test-package-template ";;; <name>.el --- desc\n;; Version: <version>\n(provide '<name>)\n;;; <name>.el ends here")
+
+(defun pallet-test-package-text (package)
+  "Return text for a given PACKAGE"
+  (let ((name (symbol-name (car package)))
+        (version (pallet-test-version-string (cadr package))))
+    (s-replace-all `(("<name>" . ,name) ("<version>" . ,version))
+                   pallet-test-package-template)))
+
+(defun pallet-test-add-servant-package (package)
+  "Add PACKAGE to the servant repository"
+  (f-write (pallet-test-package-text package)
+           'utf-8
+           (f-expand (format "%s.el"
+                             (pallet-test-versioned-name (car package)
+                                                         (cadr package)))
+                     pallet-test-package-path))
+  (shell-command (format "cd %s && cask exec servant index --path %s"
+                         pallet-test-root-path
+                         pallet-test-test-path)))
+
 (defun pallet-test-cask-file ()
   "Path to the sandboxed Cask file"
   (f-expand "Cask" pallet-test-sandbox-path))
@@ -71,11 +92,18 @@
        (pallet-mode -1)
        (pallet-test-cleanup-packages)
        (pallet-test-cleanup-sandbox)
+       (pallet-test-cleanup-servant)
        ,@body)))
 
 (defun pallet-test-cleanup-sandbox ()
   "Clean the sandbox."
   (f-entries pallet-test-sandbox-path
+             (lambda (entry)
+               (f-delete entry t))))
+
+(defun pallet-test-cleanup-servant ()
+  "Clean the sandbox."
+  (f-entries pallet-test-package-path
              (lambda (entry)
                (f-delete entry t))))
 

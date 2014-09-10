@@ -43,6 +43,17 @@
 ;;    (package-install 'package-one)
 ;;    (should (test/cask-file-contains-p "(depends-on \"package-one\")"))))
 
+(ert-deftest test/pack-on-install-desc ()
+  "it responds to package-install when the argument is a package-desc"
+  (test/with-sandbox
+   (test/add-servant-package '(package-one (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))
+   (package-refresh-contents)
+   (package-install (test/package-desc-create '(package-one (0 0 1))))
+   (should (test/cask-file-contains-p "(depends-on \"package-one\")"))))
+
 ;; (ert-deftest test/unpack-on-delete ()
 ;;   "it removes a package from the Cask file on package-delete"
 ;;   (test/with-sandbox
@@ -55,7 +66,7 @@
 ;;    (pallet-init)
 ;;    (should (test/cask-file-contains-p "(depends-on \"package-one\")"))
 ;;    (should (test/cask-file-contains-p "(depends-on \"package-two\")"))
-;;    (test/package-delete 'package-one '(0 0 1))
+;;    (test/package-delete '(package-one (0 0 1)))
 ;;    (should (test/cask-file-contains-p "(depends-on \"package-two\")"))
 ;;    (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))))
 

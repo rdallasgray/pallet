@@ -55,17 +55,25 @@
   (test/create-cask-file
    (format "(source \"servant\" \"%s\")%s" test/servant-url text)))
 
-(defun test/package-delete (name &optional version)
-  "Run package delete in 24.3.1 or >= 24.3.5 environments."
+(defun test/package-delete (package)
+  "Delete PACKAGE in 24.3.1 or >= 24.3.5 environments."
   (if (fboundp 'package-desc-create)
-      (package-delete (package-desc-create
-                       :name name
-                       :version version
-                       :summary ""
-                       :dir (f-expand
-                             (test/versioned-name name version)
-                             package-user-dir)))
-    (package-delete name version)))
+      (package-delete (test/package-desc-create package))
+    (package-delete (car package) (cadr package))))
+
+(defun test/package-desc-create (package)
+  "Return a package-desc for PACKAGE"
+  (let ((name (car package))
+        (version (cadr package)))
+    (package-desc-create
+     :name name
+     :version version
+     :kind 'single
+     :summary ""
+     :archive "servant"
+     :dir (f-expand
+           (test/versioned-name name version)
+           package-user-dir))))
 
 (defun test/versioned-name (name version)
   "Return a versioned file name as string from string `name' and list `version'"
@@ -111,7 +119,7 @@
   (mapcar (lambda (package)
             (when (package-installed-p (car package) (cadr package))
               (ignore-errors
-                (test/package-delete (car package) (cadr package)))))
+                (test/package-delete package))))
           test/packages)
   (package-initialize))
 

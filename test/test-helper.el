@@ -95,9 +95,9 @@
                          test/root-path
                          cmd
                          test/test-path
-                         (when async "&"))))
+                         (if async "& nohup" ""))))
     (message "Running shell command: %s" c)
-    (shell-command-to-string c)))
+    (shell-command c t nil)))
 
 (defmacro test/with-sandbox (&rest body)
   "Run BODY and clean up afterwards"
@@ -105,9 +105,9 @@
          (user-emacs-directory ,test/sandbox-path)
          (package-user-dir ,(f-expand "elpa" test/sandbox-path)))
      (unwind-protect
-         (progn ,@body)
+         (progn
+           ,@body)
        (progn
-         (test/servant-command "stop")
          (pallet-mode -1)
          (test/cleanup-packages)
          (test/cleanup-sandbox)

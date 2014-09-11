@@ -32,6 +32,17 @@
    (pallet-update)
    (should (package-installed-p 'package-two '(0 0 2)))))
 
+(ert-deftest test/update-no-delete ()
+  "when updating, it doesn't delete existing packages from the Cask file"
+  (test/with-sandbox
+   (test/add-servant-package '(package-two (0 0 1)))
+   (test/create-cask-file-with-servant "(depends-on \"package-two\")")
+   (pallet-mode t)
+   (pallet-install)
+   (test/add-servant-package '(package-two (0 0 2)))
+   (pallet-update)
+   (should (test/cask-file-contains-p "(depends-on \"package-two\")"))))
+
 (ert-deftest test/pack-on-install ()
   "it adds a package to the Cask file on package-install"
   (test/with-sandbox
@@ -42,6 +53,20 @@
    (package-refresh-contents)
    (package-install 'package-one)
    (should (test/cask-file-contains-p "(depends-on \"package-one\")"))))
+
+(ert-deftest test/pack-on-install-unique ()
+  "it doesn't create duplicate entries on repeated installs"
+  (test/with-sandbox
+   (test/add-servant-package '(package-two (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (package-refresh-contents)
+   (package-install 'package-two)
+   (test/add-servant-package '(package-two (0 0 2)))
+   (package-refresh-contents)
+   (package-install 'package-two)
+   (message "cask: %s" (f-read test/cask-file))
+   (should (eq (s-count-matches "package-two" (f-read test/cask-file)) 1))))
 
 (ert-deftest test/pack-on-install-desc ()
   "it responds correctly to package-install when the argument is a package-desc"
@@ -56,7 +81,7 @@
      (should (test/cask-file-contains-p "(depends-on \"package-one\")")))))
 
 (ert-deftest test/unpack-on-delete ()
-  "it removes a package from the Cask file on package-delete ()"
+  "it removes a package from the Cask file on package-delete"
   (test/with-sandbox
    (test/add-servant-package '(package-one (0 0 1)))
    (test/add-servant-package '(package-two (0 0 1)))

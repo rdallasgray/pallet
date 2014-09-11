@@ -105,11 +105,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
         (format "%s" (package-desc-name package-name-or-desc))
       nil)))
 
-(defun pallet--suspend-deletes (body)
-  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
-  (when body (funcall body))
-  (ad-enable-advice 'package-delete 'after 'pallet--after-delete))
-
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
   (if package-alist
@@ -130,7 +125,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (let ((package-name (aref package-details 1)))
         (when (not (equal package-name excluded-package-name))
           (push (format "%s" package-name) picked))))
-    picked))
+    (delete-dups picked)))
 
 (defun pallet--pack (archives packages)
   "Construct a Caskfile from ARCHIVES and PACKAGES."

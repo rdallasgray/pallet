@@ -1,128 +1,97 @@
-;; getting installed package names from the existing package.el setup
+(ert-deftest test/init ()
+  "it writes a Cask file on pallet-init, listing installed packages"
+  (test/with-sandbox
+   (test/add-servant-package '(package-one (0 0 1)))
+   (package-refresh-contents)
+   (package-install 'package-one)
+   (should (not (f-exists? test/cask-file)))
+   (pallet-mode t)
+   (pallet-init)
+   (should (f-exists? test/cask-file))
+   (should (test/cask-file-contains-p "(depends-on \"package-one\")"))))
 
-(ert-deftest pallet-test-pick-packages ()
-  "it should pick a list of installed package names"
-  (pallet-test-with-sandbox
-   (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
-   (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
-   (should (equal (-difference (pallet--pick-packages)
-                               '("package-one" "package-two")) nil))))
-
-
-;; writing a correct Cask file
-
-(ert-deftest pallet-test-write-sources ()
-  "it should write Cask-formatted sources"
-  (let* ((sources '(("example" . "http://example.com/packages/")
-                    ("gnu" . "http://elpa.gnu.org/packages/")))
-         (cask-sources (pallet--write-sources sources)))
-    (should (and
-             (s-contains?
-              "(source gnu)" cask-sources)
-             (s-contains?
-              "(source \"example\" \"http://example.com/packages/\")" cask-sources)))))
-
-(ert-deftest pallet-test-write-depends ()
-  "it should write Cask-formatted dependencies"
-  (let* ((depends '("package-one" "package-two"))
-         (cask-depends (pallet--write-depends depends)))
-    (should (and
-             (s-contains?
-              "(depends-on \"package-one\")" cask-depends)
-             (s-contains?
-              "(depends-on \"package-two\")" cask-depends)))))
-
-
-;; initialising Cask
-
-(ert-deftest pallet-test-cask-up-on-load ()
-  "it should initialize Cask on load"
-  (with-mock
-   (mock (cask-initialize))
-   (run-hooks 'after-init-hook)))
-
-(ert-deftest pallet-test-init ()
-  "it should write a Cask file on pallet-init"
-  (pallet-test-with-sandbox
-   (with-mock
-    (stub pallet-install)
-    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
-    (pallet-init)
-    (should (s-contains? "(depends-on \"package-one\")"
-                         (f-read-text (pallet--cask-file)))))))
-
-
-;; installing and updating packages
-
-(ert-deftest pallet-test-install ()
-  "it should install packages from the Cask file"
-  (pallet-test-with-sandbox
-   (when (package-installed-p 'ack)
-     (pallet-test-do-package-delete "ack"))
-   (pallet-test-create-cask-file "(source gnu)(depends-on \"ack\")")
+(ert-deftest test/install ()
+  "it installs packages from the Cask file"
+  (test/with-sandbox
+   (test/add-servant-package '(package-one (0 0 1)))
+   (test/create-cask-file-with-servant "(depends-on \"package-one\")")
+   (should (not (package-installed-p 'package-one)))
+   (pallet-mode t)
    (pallet-install)
-   (should (package-installed-p 'ack))))
+   (should (package-installed-p 'package-one))))
 
-(ert-deftest pallet-test-update ()
-  "it should update packages in the Cask file without deleting them"
-  (pallet-test-with-sandbox
-   (pallet-test-create-cask-file "(source gnu)(depends-on \"ack\")")
+(ert-deftest test/update ()
+  "it updates packages in the Cask file"
+  (test/with-sandbox
+   (test/add-servant-package '(package-two (0 0 1)))
+   (test/create-cask-file-with-servant "(depends-on \"package-two\")")
+   (pallet-mode t)
    (pallet-install)
+   (should (package-installed-p 'package-two '(0 0 1)))
+   (test/add-servant-package '(package-two (0 0 2)))
    (pallet-update)
-   (should (package-installed-p 'ack))
-   (should (s-contains? "(depends-on \"ack\")"
-                        (f-read-text (pallet--cask-file))))))
+   (should (package-installed-p 'package-two '(0 0 2)))))
 
-;; advising package.el functions to add to and delete from the Cask file
+(ert-deftest test/update-no-delete ()
+  "when updating, it doesn't delete existing packages from the Cask file"
+  (test/with-sandbox
+   (test/add-servant-package '(package-two (0 0 1)))
+   (test/create-cask-file-with-servant "(depends-on \"package-two\")")
+   (pallet-mode t)
+   (pallet-install)
+   (test/add-servant-package '(package-two (0 0 2)))
+   (pallet-update)
+   (should (test/cask-file-contains-p "(depends-on \"package-two\")"))))
 
-(ert-deftest pallet-test-pack-on-install ()
-  "it should add a package to the Cask file on package-install"
-  (pallet-test-with-sandbox
-   (with-mock
-    (pallet-test-create-cask-file "(source gnu)")
-    (pallet-init)
-    (package-install 'ack)
-    (should (s-contains? "(depends-on \"ack\")"
-                         (f-read-text (pallet--cask-file)))))))
+(ert-deftest test/pack-on-install ()
+  "it adds a package to the Cask file on package-install"
+  (test/with-sandbox
+   (test/add-servant-package '(package-one (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))
+   (package-refresh-contents)
+   (package-install 'package-one)
+   (should (test/cask-file-contains-p "(depends-on \"package-one\")"))))
 
-(ert-deftest pallet-test-no-pack-on-duplicate-install ()
-  "it should not add a duplicate package to the Cask file on package-install"
-  (pallet-test-with-sandbox
-   (with-mock
-    (pallet-test-create-cask-file "(source gnu)")
-    (pallet-init)
-    (package-install 'ack)
-    (package-install 'ack)
-    (should-not (s-matches? "\\((depends-on \"ack\")\\)\\(.\\|\n\\)*\\1"
-                            (f-read-text (pallet--cask-file)))))))
+(ert-deftest test/pack-on-install-unique ()
+  "it doesn't create duplicate entries on repeated installs"
+  (test/with-sandbox
+   (test/add-servant-package '(package-two (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (package-refresh-contents)
+   (package-install 'package-two)
+   (test/add-servant-package '(package-two (0 0 2)))
+   (package-refresh-contents)
+   (package-install 'package-two)
+   (message "cask: %s" (f-read test/cask-file))
+   (should (eq (s-count-matches "package-two" (f-read test/cask-file)) 1))))
 
-(ert-deftest pallet-test-unpack-on-delete ()
-  "it should remove a package from the Cask file on package-delete"
-  (pallet-test-with-sandbox
-   (with-mock
-    (stub pallet-install)
-    (package-install-file (pallet-test-package-file "package-one-0.0.1.el"))
-    (package-install-file (pallet-test-package-file "package-two-0.0.1.el"))
-    (pallet-init)
-    (pallet-test-do-package-delete "package-one" "0.0.1")
-    (should (s-contains? "(depends-on \"package-two\")"
-                         (f-read-text (pallet--cask-file))))
-    (should (not (s-contains? "(depends-on \"package-one\")"
-                              (f-read-text (pallet--cask-file))))))))
+(ert-deftest test/pack-on-install-desc ()
+  "it responds correctly to package-install when the argument is a package-desc"
+  (when (fboundp 'package-desc-create)
+    (test/with-sandbox
+     (test/add-servant-package '(package-one (0 0 1)))
+     (pallet-mode t)
+     (pallet-init)
+     (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))
+     (package-refresh-contents)
+     (package-install (test/package-desc-create '(package-one (0 0 1))))
+     (should (test/cask-file-contains-p "(depends-on \"package-one\")")))))
 
-
-;; handling 24.3.1 and 24.3.5 package.el systems
-
-(ert-deftest pallet-test-package-name-symbol ()
-  "it should handle a package name as a symbol"
-  (should (string= (pallet--package-name 'package-one) "package-one")))
-
-(if (fboundp 'package-desc-create)
-    (ert-deftest pallet-test-package-name-desc ()
-      "it should handle a package name as a package-desc"
-      (let ((desc (package-desc-create :name "package-one" :version "0.0.1")))
-        (should (string= (pallet--package-name desc) "package-one")))))
-
-(ert-deftest pallet-test-package-name-string ()
-  "it should handle a package name as a string"
-  (should (string= (pallet--package-name "package-one") "package-one")))
+(ert-deftest test/unpack-on-delete ()
+  "it removes a package from the Cask file on package-delete"
+  (test/with-sandbox
+   (test/add-servant-package '(package-one (0 0 1)))
+   (test/add-servant-package '(package-two (0 0 1)))
+   (package-refresh-contents)
+   (package-install 'package-one)
+   (package-install 'package-two)
+   (pallet-mode t)
+   (pallet-init)
+   (should (test/cask-file-contains-p "(depends-on \"package-one\")"))
+   (should (test/cask-file-contains-p "(depends-on \"package-two\")"))
+   (test/package-delete '(package-one (0 0 1)))
+   (should (test/cask-file-contains-p "(depends-on \"package-two\")"))
+   (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))))

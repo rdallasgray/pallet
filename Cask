@@ -1,6 +1,6 @@
 (source melpa)
 
-(package "pallet" "0.6.5" "A package management tool for Emacs, using Cask.")
+(package "pallet" "@VERSION" "A package management tool for Emacs, using Cask.")
 
 (depends-on "cask" "0.6")
 
@@ -8,4 +8,5 @@
  (depends-on "ert-runner")
  (depends-on "el-mock")
  (depends-on "f")
- (depends-on "s"))
+ (depends-on "s")
+ (depends-on "servant"))

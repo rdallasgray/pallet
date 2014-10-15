@@ -1,4 +1,4 @@
-(let ((current-directory (file-name-directory load-file-name)))
+(let ((current-directory (file-name-directory (f-this-file))))
   (setq test/test-path (f-expand "." current-directory)
         test/root-path (f-expand ".." current-directory)
         test/sandbox-path (f-expand "sandbox" test/test-path)
@@ -13,8 +13,8 @@
 (require 'package)
 
 (defvar test/packages '((package-one (0 0 1))
-                               (package-two (0 0 1))
-                               (package-two (0 0 2))))
+                        (package-two (0 0 1))
+                        (package-two (0 0 2))))
 
 (ignore-errors (make-directory test/sandbox-path))
 

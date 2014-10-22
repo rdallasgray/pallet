@@ -1,3 +1,7 @@
+[![Melpa Status](http://melpa.milkbox.net/packages/pallet-badge.svg)](http://melpa.milkbox.net/#/pallet)
+[![Melpa Stable Status](http://melpa-stable.milkbox.net/packages/pallet-badge.svg)](http://melpa-stable.milkbox.net/#/pallet)
+
+
 #Pallet
 
 Pallet is a package management tool for Emacs.

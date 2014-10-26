@@ -3,3 +3,4 @@ flycheck*
 test/sandbox/*
 test/servant/*
 !test/servant/**/.gitkeep
+.vagrant

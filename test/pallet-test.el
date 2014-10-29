@@ -30,6 +30,7 @@
    (should (package-installed-p 'package-two '(0 0 1)))
    (test/add-servant-package '(package-two (0 0 2)))
    (pallet-update)
+   (package-initialize)
    (should (package-installed-p 'package-two '(0 0 2)))))
 
 (ert-deftest test/update-no-delete ()

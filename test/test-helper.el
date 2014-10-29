@@ -59,7 +59,8 @@
   "Delete PACKAGE in 24.3.1 or >= 24.3.5 environments."
   (if (fboundp 'package-desc-create)
       (package-delete (test/package-desc-create package))
-    (package-delete (car package) (cadr package))))
+    (package-delete (symbol-name (car package))
+                    (test/version-string (cadr package)))))
 
 (defun test/package-desc-create (package)
   "Return a package-desc for PACKAGE"

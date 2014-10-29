@@ -1,5 +1,4 @@
 #Pallet
-
 Pallet is a package management helper for Emacs.
 
 It uses @rejeep's excellent
@@ -14,12 +13,10 @@ deletes. See the instructions below.
 
 Version 0.7 introduces a new integration test harness using
 [Servant](https://github.com/cask/servant). This is intended to allow
-safer and quicker addition of new features going forward. The tests
-have at present only been run in Emacs 24.4.
+safer and quicker addition of new features going forward.
 
 ##Target platform
-
-Pallet should work with Emacs 24 (including recent snapshots).
+Pallet is currently tested with Emacs versions 24.3 through 24.4.
 
 ##Use
 Pallet has a very simple interface:
@@ -35,7 +32,6 @@ t)` to your Emacs init file, or by calling `pallet-mode` interactively (`M-x
 pallet-mode`).
 
 ##Installation
-
 To install pallet, you should first install Cask, following the
 instructions [here](http://cask.readthedocs.org/en/latest/). **At present,
 just install Cask -- don't add anything to your .emacs or init.el file**.
@@ -44,7 +40,7 @@ After installing Cask, there are two ways you can go, depending on
 your situation:
 
 1. **I have a working Emacs install, with packages already installed,
-   and can access [Melpa](http://melpa.milbox.org).**
+   and can access [Melpa](http://melpa.org).**
 
    In this case run `M-x list-packages`, and install pallet.  Then,
    run `M-x pallet-init`. Now you have a Cask file in your emacs.d
@@ -106,11 +102,31 @@ Fork and clone the repo, then run `git
 submodule update --init`, which will install
 [el.mk](http://github.com/rdallasgray/el.mk).
 
-Now, [install Cask](https://github.com/rejeep/cask.el).
+###Simple testing
+Install [Cask](http://cask.readthedocs.org/en/latest).
 
-Then run `cask install`. You should now be able to run the tests using
-`make test`.
+Then run `cask install` to install development dependencies. You
+should now be able to run the tests: `make test`.
 
-Any new feature or bugfix should be covered by tests -- see the files
+###Complete testing
+The pallet dev setup includes a Vagrantfile, which allows pallet to be
+tested against a selection of recent Emacs releases.
+
+Having installed [Vagrant](https://vagrantup.com), add the necessary
+box by running:
+```bash
+vagrant box add trusty-server \
+https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box
+```
+
+Then run `vagrant up`. This may take a while, as several versions of
+Emacs may be downloaded and installed from source.
+
+Shell into the vm by running `vagrant ssh`, and run the tests using
+`./test_all.sh`. This will run the complete test suite against all
+installed Emacs versions.
+
+###Pull requests
+Any new feature or fix should be covered by tests -- see the files
 in /test for guidance on how to write your own. When you've
-created your feature, make a pull request against master in this repo.
+created your feature or fix, make a pull request against master in this repo.

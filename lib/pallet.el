@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.6.6
+;; Version: 0.7.0
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -31,16 +31,22 @@
 ;;
 ;; #Pallet
 ;; 
-;; Pallet is a package management tool for Emacs.
+;; Pallet is a package management helper for Emacs.
 ;; 
 ;; It uses @rejeep's excellent
-;; [Cask](https://github.com/rejeep/cask.el) as a platform to keep
+;; [Cask](https://github.com/cask/cask) as a platform to keep
 ;; track of your installed packages.
 ;; 
 ;; ##News
-;; Pallet version 0.6 is now available. This version introduces some
-;; breaking changes against previous versions, the most significant being
-;; that Pallet will *only* work with Cask v0.6 or later.
+;; Pallet version 0.7 is now available. This version introduces a
+;; significant breaking change: it is now necessary to start
+;; `pallet-mode` for pallet to track your package installs and
+;; deletes. See the instructions below.
+;; 
+;; Version 0.7 introduces a new integration test harness using
+;; [Servant](https://github.com/cask/servant). This is intended to allow
+;; safer and quicker addition of new features going forward. The tests
+;; have at present only been run in Emacs 24.4.
 ;; 
 ;; ##Target platform
 ;; 
@@ -55,32 +61,34 @@
 ;; 
 ;; Pallet's main job, though, is to add and delete package references
 ;; from your Cask file as you install and delete them using the built-in
-;; Emacs package management system. It does this automatically and silently.
+;; Emacs package management system. Turn this on by adding `(pallet-mode
+;; t)` to your Emacs init file, or by calling `pallet-mode` interactively (`M-x
+;; pallet-mode`).
 ;; 
 ;; ##Installation
 ;; 
-;; To install Pallet, you should first install Cask, following the
-;; instructions [here](https://github.com/rejeep/cask.el). **At present,
+;; To install pallet, you should first install Cask, following the
+;; instructions [here](http://cask.readthedocs.org/en/latest/). **At present,
 ;; just install Cask -- don't add anything to your .emacs or init.el file**.
 ;; 
 ;; After installing Cask, there are two ways you can go, depending on
 ;; your situation:
 ;; 
 ;; 1. **I have a working Emacs install, with packages already installed,
-;;    and can access [MELPA](http://melpa.milbox.org).**
+;;    and can access [Melpa](http://melpa.milbox.org).**
 ;; 
-;;    In this case run `M-x list-packages`, and install Pallet.
-;;    Then, run `M-x pallet-init`. Now you have a Cask file in your
-;;    emacs.d directory which contains listings for all files you've
-;;    previously installed via `package-install`, and your .emacs.d/elpa
-;;    directory has been replicated under .emacs.d/.cask/.
+;;    In this case run `M-x list-packages`, and install pallet.  Then,
+;;    run `M-x pallet-init`. Now you have a Cask file in your emacs.d
+;;    directory which contains listings for all files you've previously
+;;    installed via `package-install`. Run `M-x pallet-install`, and your
+;;    .emacs.d/elpa directory will be replicated under .emacs.d/.cask/.
 ;; 
 ;;    You can if you wish now delete your .emacs.d/elpa directory, and
 ;;    remove any lines from your init.el adding archives to
 ;;    `package-archive`, or running `package-initialize`.
 ;; 
 ;; 2. **I have a newly installed Emacs and/or am not set up to access
-;;    MELPA.**
+;;    Melpa.**
 ;; 
 ;;    In this case, create a file called `Cask` in your emacs.d
 ;;    directory. Add the following lines to it:
@@ -99,7 +107,7 @@
 ;; 
 ;;    This will create a .cask directory inside your .emacs.d directory,
 ;;    initialize a package directory under .emacs.d/.cask/, and install
-;;    Pallet to it.
+;;    pallet to it.
 ;; 
 ;; **Finally, make sure the following lines are in your init.el, before any
 ;;   packages are required:**
@@ -108,14 +116,22 @@
 ;; (require 'cask "<path-to-cask>/cask.el")
 ;; (cask-initialize)
 ;; (require 'pallet)
+;; (pallet-mode t)
 ;; ```
 ;; 
 ;; `<path-to-cask>` will vary depending on how you installed Cask: if you
 ;; installed via the `curl` method, it is likely to be `~/.cask`; if you
-;; installed via Homebrew, it is likely to be `/usr/local/Cellar/cask/<version>`.
+;; installed via Homebrew, it is likely to be
+;; `/usr/local/Cellar/cask/<version>`.
+;; 
+;; If you want pallet to maintain your Cask file automatically as you
+;; install and delete packages using Emacs' built-in package-management,
+;; enable `pallet-mode` by calling `(pallet-mode t)`. You can enable or
+;; disable `pallet-mode` at any time by interactively calling
+;; `pallet-mode` (`M-x pallet-mode`).
 ;; 
 ;; ##Contributing
-;; Contributions to Pallet are very welcome.
+;; Contributions to pallet are very welcome.
 ;; 
 ;; Fork and clone the repo, then run `git
 ;; submodule update --init`, which will install
@@ -144,29 +160,38 @@
 
 ;; interactive/api functions
 
-;;;###autoload
 (defun pallet-init ()
   "Bootstrap a Cask setup from package.el information."
   (interactive)
-  (pallet--repack t)
-  (pallet-install))
+  (pallet--repack t))
 
-;;;###autoload
 (defun pallet-install ()
   "Install packages from the Cask file."
   (interactive)
   (pallet--cask-up
    (lambda (bundle) (cask-install bundle))))
 
-;;;###autoload
 (defun pallet-update ()
   "Update installed packages."
   (interactive)
-  (pallet--suspend-deletes
-   (pallet--cask-up
-    (lambda (bundle) (cask-update bundle)))))
+  (pallet--cask-up
+   (lambda (bundle) (cask-update bundle))))
 
 ;;; private functions
+
+(defun pallet--on ()
+  "Add and remove entries from your Cask file on `package-install' and `package-delete'."
+  (ad-enable-advice 'package-install 'after 'pallet--after-install)
+  (ad-enable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
+
+(defun pallet--off ()
+  "Stop reacting to `package-install' and `package-delete'."
+  (ad-disable-advice 'package-install 'after 'pallet--after-install)
+  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
+  (ad-activate 'package-install)
+  (ad-activate 'package-delete))
 
 (defun pallet--repack (&optional use-copy)
   "Recreate the Cask file from package.el information;
@@ -186,10 +211,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Location of the Cask file."
   (expand-file-name "Cask" user-emacs-directory))
 
-(defun pallet--enable-cask-up-on-load ()
-  "Add a hook to run `pallet--cask-up' when Emacs has initialised."
-  (add-hook 'after-init-hook 'pallet--cask-up))
-
 (defun pallet--package-name (package-name-or-desc)
   "Return a package name from a string or package-desc struct in PACKAGE-NAME-OR-DESC."
   (if (or (stringp package-name-or-desc)
@@ -198,11 +219,6 @@ use `pallet--package-archives-copy' if USE-COPY is true."
     (if (fboundp 'package-desc-name)
         (format "%s" (package-desc-name package-name-or-desc))
       nil)))
-
-(defun pallet--suspend-deletes (body)
-  (ad-disable-advice 'package-delete 'after 'pallet--after-delete)
-  (when body (funcall body))
-  (ad-enable-advice 'package-delete 'after 'pallet--after-delete))
 
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
@@ -286,22 +302,17 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (epl-package-installed-p (intern package-name)))
 
 
-;; add hook to enable Cask init on load
-
-(pallet--enable-cask-up-on-load)
-
-
 ;; advise package.el functions
 
 (defadvice package-install
-  (after pallet--after-install (package-name-or-desc) activate)
+    (after pallet--after-install (package-name-or-desc))
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
     (message "Pallet: packing %s" package-name)
     (pallet--pack-one package-name)))
 
 (defadvice package-delete
-  (after pallet--after-delete (package-name-or-desc &optional version) activate)
+  (after pallet--after-delete (package-name-or-desc &optional version))
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
   (let ((package-name (pallet--package-name package-name-or-desc)))
@@ -309,6 +320,15 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (message "Pallet: unpacking %s" package-name)
       (pallet--unpack-one package-name))))
 
+;;;###autoload
+(define-minor-mode pallet-mode
+  "Maintain entries in your Cask file automatically."
+  :init-value nil
+  :global t
+  :group 'pallet
+  (if pallet-mode
+      (pallet--on)
+    (pallet--off)))
 
 (provide 'pallet)
 

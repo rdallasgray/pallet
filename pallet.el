@@ -100,19 +100,16 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--package-name (package-name-or-desc)
   "Return a package name from a string or package-desc struct in PACKAGE-NAME-OR-DESC."
-  (if (or (stringp package-name-or-desc)
-          (symbolp package-name-or-desc))
-      (format "%s" package-name-or-desc)
-    (if (fboundp 'package-desc-name)
-        (format "%s" (package-desc-name package-name-or-desc))
-      nil)))
+  (cond ((symbolp package-name-or-desc) package-name-or-desc)
+        ((stringp package-name-or-desc) (intern package-name-or-desc))
+        ((fboundp 'package-desc-name) (package-desc-name package-name-or-desc))))
 
 (defun pallet--pick-packages ()
   "Get a simple list of installed packages."
   (if package-alist
       (let ((picked '()))
-        (dolist (package-details package-alist)
-          (push (symbol-name (car package-details)) picked))
+        (dolist (package package-alist)
+          (push (make-cask-dependency :name (car package)) picked))
         (reverse picked))
     nil))
 
@@ -123,10 +120,10 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--pick-cask-except (bundle excluded-package-name)
   "Get a list of dependencies from the Cask BUNDLE, excluding EXCLUDED-PACKAGE-NAME."
   (let ((picked '()))
-    (dolist (package-details (cask-runtime-dependencies bundle))
-      (let ((package-name (aref package-details 1)))
-        (when (not (equal package-name excluded-package-name))
-          (push (format "%s" package-name) picked))))
+    (dolist (package (cask-runtime-dependencies bundle))
+      (when (not (equal (cask-dependency-name package)
+                      excluded-package-name))
+          (push package picked)))
     (delete-dups picked)))
 
 (defun pallet--pack (archives packages)
@@ -139,7 +136,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Add PACKAGE-NAME to the Caskfile."
   (pallet--cask-up
    (lambda (bundle)
-     (cask-add-dependency bundle (format "%s" package-name) :scope 'runtime)
+     (cask-add-dependency bundle package-name :scope 'runtime)
      (pallet--ship package-archives (pallet--pick-cask bundle)))))
 
 (defun pallet--unpack-one (package-name)
@@ -147,7 +144,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   (pallet--cask-up
    (lambda (bundle)
      (pallet--ship package-archives
-                     (pallet--pick-cask-except bundle (intern package-name))))))
+                     (pallet--pick-cask-except bundle package-name)))))
 
 (defun pallet--ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
@@ -187,9 +184,28 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   "Create a Caskfile dependency set from PACKAGE-LIST."
   (let ((depends-list '()))
     (dolist (package package-list)
-      (push (format "(depends-on \"%s\")" package) depends-list))
+      (push (pallet--format-dependency package) depends-list))
     (let ((depends-list (sort depends-list #'string<)))
       (mapconcat 'identity depends-list "\n"))))
+
+(defun pallet--format-dependency (package)
+  "Return a string correctly formatting a dependency PACKAGE."
+  (let ((depend-args (list (symbol-name (cask-dependency-name package)))))
+    (-when-let (version (cask-dependency-version package))
+      (nconc depend-args (list version)))
+    (-when-let (fetcher (cask-dependency-fetcher package))
+      (nconc depend-args (list fetcher))
+      (let ((url (cask-dependency-url package)))
+        (nconc depend-args (list url)))
+      (-when-let (ref (cask-dependency-ref package))
+        (nconc depend-args (list :ref ref)))
+      (-when-let (branch (cask-dependency-branch package))
+        (nconc depend-args (list :branch branch)))
+      (-when-let (files (cask-dependency-files package))
+        (nconc depend-args (list :files files))))
+    (format "(depends-on %s)" (mapconcat
+                               (lambda (x) (format "%S" x))
+                               depend-args " "))))
 
 (defun pallet--write-file (file contents)
   "Write to FILE the given (string) CONTENTS."
@@ -200,7 +216,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
   ;; Ensure we have up-to-date information -- package-delete doesn't
   ;; recreate package-alist automatically.
   (epl-initialize t)
-  (epl-package-installed-p (intern package-name)))
+  (epl-package-installed-p package-name))
 
 
 ;; advise package.el functions

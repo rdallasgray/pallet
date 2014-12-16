@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.7.0
+;; Version: 0.8.0
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -29,8 +29,11 @@
 
 ;;; Commentary:
 ;;
-;; #Pallet
+;; [![Melpa Status](http://melpa.milkbox.net/packages/pallet-badge.svg)](http://melpa.milkbox.net/#/pallet)
+;; [![Melpa Stable Status](http://melpa-stable.milkbox.net/packages/pallet-badge.svg)](http://melpa-stable.milkbox.net/#/pallet)
 ;; 
+;; 
+;; #Pallet
 ;; Pallet is a package management helper for Emacs.
 ;; 
 ;; It uses @rejeep's excellent
@@ -38,19 +41,19 @@
 ;; track of your installed packages.
 ;; 
 ;; ##News
-;; Pallet version 0.7 is now available. This version introduces a
-;; significant breaking change: it is now necessary to start
-;; `pallet-mode` for pallet to track your package installs and
-;; deletes. See the instructions below.
+;; Version 0.8 introduces the `;;;pallet-ignore` comment, which allows
+;; you to tell Pallet to ignore (and retain) text following the comment.
+;; 
+;; Version 0.7 introduces a significant breaking change: it is now
+;; necessary to start `pallet-mode` for pallet to track your package
+;; installs and deletes. See the instructions below.
 ;; 
 ;; Version 0.7 introduces a new integration test harness using
 ;; [Servant](https://github.com/cask/servant). This is intended to allow
-;; safer and quicker addition of new features going forward. The tests
-;; have at present only been run in Emacs 24.4.
+;; safer and quicker addition of new features going forward.
 ;; 
 ;; ##Target platform
-;; 
-;; Pallet should work with Emacs 24 (including recent snapshots).
+;; Pallet is currently tested with Emacs versions 24.3 through 24.4.
 ;; 
 ;; ##Use
 ;; Pallet has a very simple interface:
@@ -66,7 +69,6 @@
 ;; pallet-mode`).
 ;; 
 ;; ##Installation
-;; 
 ;; To install pallet, you should first install Cask, following the
 ;; instructions [here](http://cask.readthedocs.org/en/latest/). **At present,
 ;; just install Cask -- don't add anything to your .emacs or init.el file**.
@@ -75,7 +77,7 @@
 ;; your situation:
 ;; 
 ;; 1. **I have a working Emacs install, with packages already installed,
-;;    and can access [Melpa](http://melpa.milbox.org).**
+;;    and can access [Melpa](http://melpa.org).**
 ;; 
 ;;    In this case run `M-x list-packages`, and install pallet.  Then,
 ;;    run `M-x pallet-init`. Now you have a Cask file in your emacs.d
@@ -130,6 +132,20 @@
 ;; disable `pallet-mode` at any time by interactively calling
 ;; `pallet-mode` (`M-x pallet-mode`).
 ;; 
+;; ##Ignoring a section of your Cask file
+;; If you prefer to have Pallet ignore part of your Cask file (e.g. so
+;; you can use Cask's
+;; [VC dependencies](http://cask.readthedocs.org/en/latest/guide/dsl.html#dependencies)),
+;; use the `;;;pallet-ignore` comment. Pallet will ignore any text after
+;; this comment.
+;; ```lisp
+;; (source melpa)
+;; (depends-on "s")
+;; ;;;pallet-ignore
+;; (depends-on "newlisp" :git
+;; "https://github.com/coldnew/newlisp-mode.git")
+;; ```
+;; 
 ;; ##Contributing
 ;; Contributions to pallet are very welcome.
 ;; 
@@ -137,14 +153,34 @@
 ;; submodule update --init`, which will install
 ;; [el.mk](http://github.com/rdallasgray/el.mk).
 ;; 
-;; Now, [install Cask](https://github.com/rejeep/cask.el).
+;; ###Simple testing
+;; Install [Cask](http://cask.readthedocs.org/en/latest).
 ;; 
-;; Then run `cask install`. You should now be able to run the tests using
-;; `make test`.
+;; Then run `cask install` to install development dependencies. You
+;; should now be able to run the tests: `make test`.
 ;; 
-;; Any new feature or bugfix should be covered by tests -- see the files
+;; ###Complete testing
+;; The pallet dev setup includes a Vagrantfile, which allows pallet to be
+;; tested against a selection of recent Emacs releases.
+;; 
+;; Having installed [Vagrant](https://vagrantup.com), add the necessary
+;; box by running:
+;; ```bash
+;; vagrant box add trusty-server \
+;; https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box
+;; ```
+;; 
+;; Then run `vagrant up`. This may take a while, as several versions of
+;; Emacs may be downloaded and installed from source.
+;; 
+;; Shell into the vm by running `vagrant ssh`, and run the tests using
+;; `./test_all.sh`. This will run the complete test suite against all
+;; installed Emacs versions.
+;; 
+;; ###Pull requests
+;; Any new feature or fix should be covered by tests -- see the files
 ;; in /test for guidance on how to write your own. When you've
-;; created your feature, make a pull request against master in this repo.
+;; created your feature or fix, make a pull request against master in this repo.
 ;;
 ;;; Code:
 
@@ -156,7 +192,7 @@
   (copy-alist package-archives))
 
 (require 'cask)
-
+(require 'f)
 
 ;; interactive/api functions
 
@@ -177,7 +213,9 @@
   (pallet--cask-up
    (lambda (bundle) (cask-update bundle))))
 
-;;; private functions
+;;; private
+
+(defvar pallet--ignored-text-comment ";;;pallet-ignore")
 
 (defun pallet--on ()
   "Add and remove entries from your Cask file on `package-install' and `package-delete'."
@@ -264,8 +302,23 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
-  (pallet--write-file (pallet--cask-file)
-                 (pallet--pack archives packages)))
+  (let ((ignored-text (when (f-exists? (pallet--cask-file))
+                        (pallet--ignored-text
+                         (f-read-text (pallet--cask-file))))))
+    (pallet--write-file (pallet--cask-file)
+                        (pallet--with-ignored-text
+                         ignored-text
+                         (pallet--pack archives packages)))))
+
+(defun pallet--with-ignored-text (ignored-text text)
+  "Maybe insert IGNORED-TEXT below a comment, after TEXT."
+  (if ignored-text
+      (concat text "\n" pallet--ignored-text-comment ignored-text)
+    text))
+
+(defun pallet--ignored-text (text)
+  "Find TEXT after `pallet--ignored-text-comment'."
+  (nth 1 (s-split pallet--ignored-text-comment text)))
 
 (defun pallet--write-sources (archive-list)
   "Create a Caskfile source set from ARCHIVE-LIST."
@@ -291,8 +344,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--write-file (file contents)
   "Write to FILE the given (string) CONTENTS."
-  (with-temp-file file
-    (insert contents)))
+  (f-write contents 'utf-8 file))
 
 (defun pallet--installed-p (package-name)
   "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."

@@ -41,7 +41,7 @@
   (copy-alist package-archives))
 
 (require 'cask)
-
+(require 'f)
 
 ;; interactive/api functions
 
@@ -62,7 +62,9 @@
   (pallet--cask-up
    (lambda (bundle) (cask-update bundle))))
 
-;;; private functions
+;;; private
+
+(defvar pallet--ignored-text-comment ";;;pallet-ignore")
 
 (defun pallet--on ()
   "Add and remove entries from your Cask file on `package-install' and `package-delete'."
@@ -149,8 +151,23 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--ship (archives packages)
   "Create and save a Caskfile based on installed ARCHIVES and PACKAGES."
-  (pallet--write-file (pallet--cask-file)
-                 (pallet--pack archives packages)))
+  (let ((ignored-text (when (f-exists? (pallet--cask-file))
+                        (pallet--ignored-text
+                         (f-read-text (pallet--cask-file))))))
+    (pallet--write-file (pallet--cask-file)
+                        (pallet--with-ignored-text
+                         ignored-text
+                         (pallet--pack archives packages)))))
+
+(defun pallet--with-ignored-text (ignored-text text)
+  "Maybe insert IGNORED-TEXT below a comment, after TEXT."
+  (if ignored-text
+      (concat text "\n" pallet--ignored-text-comment ignored-text)
+    text))
+
+(defun pallet--ignored-text (text)
+  "Find TEXT after `pallet--ignored-text-comment'."
+  (nth 1 (s-split pallet--ignored-text-comment text)))
 
 (defun pallet--write-sources (archive-list)
   "Create a Caskfile source set from ARCHIVE-LIST."
@@ -176,8 +193,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--write-file (file contents)
   "Write to FILE the given (string) CONTENTS."
-  (with-temp-file file
-    (insert contents)))
+  (f-write contents 'utf-8 file))
 
 (defun pallet--installed-p (package-name)
   "Return t if (string) PACKAGE-NAME is installed, or nil otherwise."

@@ -10,10 +10,12 @@ It uses @rejeep's excellent
 track of your installed packages.
 
 ##News
-Pallet version 0.7 is now available. This version introduces a
-significant breaking change: it is now necessary to start
-`pallet-mode` for pallet to track your package installs and
-deletes. See the instructions below.
+Version 0.8 introduces the `;;;pallet-ignore` comment, which allows
+you to tell Pallet to ignore (and retain) text following the comment.
+
+Version 0.7 introduces a significant breaking change: it is now
+necessary to start `pallet-mode` for pallet to track your package
+installs and deletes. See the instructions below.
 
 Version 0.7 introduces a new integration test harness using
 [Servant](https://github.com/cask/servant). This is intended to allow
@@ -98,6 +100,20 @@ install and delete packages using Emacs' built-in package-management,
 enable `pallet-mode` by calling `(pallet-mode t)`. You can enable or
 disable `pallet-mode` at any time by interactively calling
 `pallet-mode` (`M-x pallet-mode`).
+
+##Ignoring a section of your Cask file
+If you prefer to have Pallet ignore part of your Cask file (e.g. so
+you can use Cask's
+[VC dependencies](http://cask.readthedocs.org/en/latest/guide/dsl.html#dependencies)),
+use the `;;;pallet-ignore` comment. Pallet will ignore any text after
+this comment.
+```lisp
+(source melpa)
+(depends-on "s")
+;;;pallet-ignore
+(depends-on "newlisp" :git
+"https://github.com/coldnew/newlisp-mode.git")
+```
 
 ##Contributing
 Contributions to pallet are very welcome.

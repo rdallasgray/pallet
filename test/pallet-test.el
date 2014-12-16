@@ -66,8 +66,29 @@
    (test/add-servant-package '(package-two (0 0 2)))
    (package-refresh-contents)
    (package-install 'package-two)
-   (message "cask: %s" (f-read test/cask-file))
    (should (eq (s-count-matches "package-two" (f-read test/cask-file)) 1))))
+
+(ert-deftest test/ignored-text ()
+  "it ignores text below a magic comment"
+  (test/with-sandbox
+   (test/create-cask-file-with-servant ";;;pallet-ignore\n;;ignored text")
+   (test/add-servant-package '(package-one (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (package-refresh-contents)
+   (package-install 'package-one)
+   (should (test/cask-file-contains-p ";;ignored text"))))
+
+(ert-deftest test/no-ignored-text ()
+  "it doesn't insert an ignored text comment if there is no ignored text"
+  (test/with-sandbox
+   (test/create-cask-file-with-servant "")
+   (test/add-servant-package '(package-one (0 0 1)))
+   (pallet-mode t)
+   (pallet-init)
+   (package-refresh-contents)
+   (package-install 'package-one)
+   (should-not (test/cask-file-contains-p ";;;pallet-ignore"))))
 
 (ert-deftest test/pack-on-install-desc ()
   "it responds correctly to package-install when the argument is a package-desc"

@@ -97,7 +97,6 @@
                          cmd
                          test/test-path
                          (if async "& nohup" ""))))
-    (message "Running shell command: %s" c)
     (shell-command c t nil)))
 
 (defmacro test/with-sandbox (&rest body)

@@ -3,6 +3,8 @@
 (package "pallet" "@VERSION" "A package management tool for Emacs, using Cask.")
 
 (depends-on "cask" "0.7")
+(depends-on "f" "0.17.1")
+(depends-on "s" "1.9.0")
 
 (development
  (depends-on "ert-runner")

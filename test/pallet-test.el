@@ -117,3 +117,35 @@
    (test/package-delete '(package-one (0 0 1)))
    (should (test/cask-file-contains-p "(depends-on \"package-two\")"))
    (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))))
+
+(ert-deftest test/preserves-version-metadata ()
+  "it does not remove existing version metadata from the Cask file"
+  (test/with-sandbox
+   (test/create-cask-file-with-servant "(depends-on \"versioned-package\" \"1\")")
+   (cask-initialize)
+   (test/add-servant-package '(package-one (0 0 1)))
+   (package-refresh-contents)
+   (pallet-mode t)
+   (package-install 'package-one)
+   (should (test/cask-file-contains-p "(depends-on \"package-one\")"))
+   (should (test/cask-file-contains-p "(depends-on \"versioned-package\" \"1\")"))
+   (test/package-delete '(package-one (0 0 1)))
+   (should (test/cask-file-contains-p "(depends-on \"versioned-package\" \"1\")"))
+   (should (not (test/cask-file-contains-p "(depends-on \"package-one\")")))
+))
+
+(ert-deftest test/preserves-vc-metadata ()
+  "it does not remove existing VC dependency metadata from the Cask file"
+  (test/with-sandbox
+   (let ((vc-dependency "(depends-on \"vc-package\" :git \"url\" :ref \"abcdef\" :branch \"feature\" :files (\"pattern1\" (\"target\" (\"source\" \"pattern2\"))))"))
+     (test/create-cask-file-with-servant vc-dependency)
+     (cask-initialize)
+     (test/add-servant-package '(package-one (0 0 1)))
+     (package-refresh-contents)
+     (pallet-mode t)
+     (package-install 'package-one)
+     (should (test/cask-file-contains-p "(depends-on \"package-one\")"))
+     (should (test/cask-file-contains-p vc-dependency))
+     (test/package-delete '(package-one (0 0 1)))
+     (should (test/cask-file-contains-p vc-dependency))
+     (should (not (test/cask-file-contains-p "(depends-on \"package-one\")"))))))

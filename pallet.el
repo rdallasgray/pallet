@@ -131,7 +131,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 
 (defun pallet--pack (archives packages)
   "Construct a Caskfile from ARCHIVES and PACKAGES."
-  (format "%s\n\n%s"
+  (format "%s\n\n%s\n"
           (pallet--write-sources archives)
           (pallet--write-depends packages)))
 
@@ -162,7 +162,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 (defun pallet--with-ignored-text (ignored-text text)
   "Maybe insert IGNORED-TEXT below a comment, after TEXT."
   (if ignored-text
-      (concat text "\n" pallet--ignored-text-comment ignored-text)
+      (concat text pallet--ignored-text-comment ignored-text)
     text))
 
 (defun pallet--ignored-text (text)

@@ -35,6 +35,7 @@
 
 (defun test/add-servant-package (package)
   "Add PACKAGE to the servant repository"
+  (ignore-errors (make-directory test/package-path))
   (f-write (test/package-text package)
            'utf-8
            (f-expand (format "%s.el"

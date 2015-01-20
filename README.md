@@ -10,6 +10,15 @@ It uses @rejeep's excellent
 track of your installed packages.
 
 ##News
+Version 0.9 introduces support for Cask version and VC references,
+which will now be retained if specified in your Cask file:
+```
+(depends on "graphene" "20141030.219")
+(depends on "pallet" :git "https://github.com/rdallasgray/pallet" :ref "master")
+```
+Many thanks to [Sam Brightman](https://github.com/sambrightman) for
+implementing this feature.
+
 Version 0.8 introduces the `;;;pallet-ignore` comment, which allows
 you to tell Pallet to ignore (and retain) text following the comment.
 

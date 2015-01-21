@@ -13,8 +13,8 @@ track of your installed packages.
 Version 0.9 introduces support for Cask version and VC references,
 which will now be retained if specified in your Cask file:
 ```
-(depends on "graphene" "20141030.219")
-(depends on "pallet" :git "https://github.com/rdallasgray/pallet" :ref "master")
+(depends-on "graphene" "20141030.219")
+(depends-on "pallet" :git "https://github.com/rdallasgray/pallet" :ref "master")
 ```
 Many thanks to [Sam Brightman](https://github.com/sambrightman) for
 implementing this feature.

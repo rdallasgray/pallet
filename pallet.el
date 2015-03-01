@@ -222,7 +222,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 ;; advise package.el functions
 
 (defadvice package-install
-    (after pallet--after-install (package-name-or-desc))
+    (after pallet--after-install (package-name-or-desc &optional dont-select))
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
     (message "Pallet: packing %s" package-name)

@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.9.0
+;; Version: 0.9.1
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -30,8 +30,6 @@
 ;;; Commentary:
 ;;
 ;; [![Melpa Status](http://melpa.milkbox.net/packages/pallet-badge.svg)](http://melpa.milkbox.net/#/pallet)
-;; [![Melpa Stable Status](http://melpa-stable.milkbox.net/packages/pallet-badge.svg)](http://melpa-stable.milkbox.net/#/pallet)
-;; 
 ;; 
 ;; #Pallet
 ;; Pallet is a package management helper for Emacs.
@@ -44,8 +42,8 @@
 ;; Version 0.9 introduces support for Cask version and VC references,
 ;; which will now be retained if specified in your Cask file:
 ;; ```
-;; (depends on "graphene" "20141030.219")
-;; (depends on "pallet" :git "https://github.com/rdallasgray/pallet" :ref "master")
+;; (depends-on "graphene" "20141030.219")
+;; (depends-on "pallet" :git "https://github.com/rdallasgray/pallet" :ref "master")
 ;; ```
 ;; Many thanks to [Sam Brightman](https://github.com/sambrightman) for
 ;; implementing this feature.
@@ -382,7 +380,7 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 ;; advise package.el functions
 
 (defadvice package-install
-    (after pallet--after-install (package-name-or-desc))
+    (after pallet--after-install (package-name-or-desc &optional dont-select))
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
     (message "Pallet: packing %s" package-name)

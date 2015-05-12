@@ -4,7 +4,7 @@
 
 ;; Author: Robert Dallas Gray
 ;; URL: https://github.com/rdallasgray/pallet
-;; Version: 0.9.1
+;; Version: 0.9.2
 ;; Created: 2013-02-24
 ;; Keywords: elpa, package
 
@@ -380,14 +380,14 @@ use `pallet--package-archives-copy' if USE-COPY is true."
 ;; advise package.el functions
 
 (defadvice package-install
-    (after pallet--after-install (package-name-or-desc &optional dont-select))
+    (after pallet--after-install (package-name-or-desc &rest args))
   "Add a dependency to the Cask file after `package-install'."
   (let ((package-name (pallet--package-name package-name-or-desc)))
     (message "Pallet: packing %s" package-name)
     (pallet--pack-one package-name)))
 
 (defadvice package-delete
-  (after pallet--after-delete (package-name-or-desc &optional version))
+  (after pallet--after-delete (package-name-or-desc &rest args))
   "Remove a dependency from the Cask file after `package-delete'."
   ;; NB check if package is still installed; updates trigger deletes
   (let ((package-name (pallet--package-name package-name-or-desc)))

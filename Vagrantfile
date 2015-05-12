@@ -5,7 +5,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box
   config.vm.box = "trusty-64"
 
-  EMACS_VERSIONS = %w{emacs-24.4 emacs-24.3 emacs-24.4.90}
+  EMACS_VERSIONS = %w{emacs-24.5 emacs-24.4 emacs-24.3}
   EMACS_REPO = "http://git.savannah.gnu.org/cgit/emacs.git/snapshot/"
   REQUIRED_PACKAGES = %w{git ncurses-dev automake autoconf texinfo}
 

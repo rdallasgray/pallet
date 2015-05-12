@@ -5,6 +5,7 @@
 (depends-on "cask" "0.7")
 (depends-on "f" "0.17.1")
 (depends-on "s" "1.9.0")
+(depends-on "dash" "2.10.0")
 
 (development
  (depends-on "ert-runner")

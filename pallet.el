@@ -42,6 +42,7 @@
 
 (require 'cask)
 (require 'f)
+(require 'dash)
 
 ;; interactive/api functions
 
@@ -251,7 +252,7 @@ automatically remove that package on them as well."
           (mapcar #'epl-package-name (epl-installed-packages)))
          (required-pkgs
           (mapcar #'cask-dependency-name (cask-dependencies (cask-initialize) t)))
-         (removable-packages (delete-dups (sort (cl-set-difference installed-pkgs required-pkgs) #'string<)))
+         (removable-packages (delete-dups (sort (-difference installed-pkgs required-pkgs) #'string<)))
          (answer
           (if removable-packages
               (yes-or-no-p (format "Remove the following packages? %S" removable-packages))

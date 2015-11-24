@@ -258,6 +258,12 @@ use `pallet--package-archives-copy' if USE-COPY is true."
                 (epl-package-delete epl-pkg)))
             (epl-installed-packages)))))
 
+(defun pallet-sync ()
+  "Synchronise installed packages (including removal of packages not referenced in the Cask file)."
+  (interactive)
+  (pallet-install)
+  (pallet-prune))
+
 ;;;###autoload
 (define-minor-mode pallet-mode
   "Maintain entries in your Cask file automatically."

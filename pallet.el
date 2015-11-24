@@ -239,14 +239,8 @@ use `pallet--package-archives-copy' if USE-COPY is true."
       (pallet--unpack-one package-name))))
 
 ;; Command to remove unrequested packages
-(defun pallet-auto-remove-packages ()
-  "Remove packages not explicitly required in Cask file.
-
-This is useful if you synchronize your Cask file across multiple
-machines and rely on pallet to cynchronize your installed
-packages. After deleting a package on one machine and syncing
-your Cask file, run this command on your other machines to
-automatically remove that package on them as well."
+(defun pallet-prune ()
+  "Remove packages not referenced in the Cask file."
   (interactive)
   (let* ((installed-pkgs
           (mapcar #'epl-package-name (epl-installed-packages)))

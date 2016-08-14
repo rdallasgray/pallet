@@ -108,6 +108,12 @@ enable `pallet-mode` by calling `(pallet-mode t)`. You can enable or
 disable `pallet-mode` at any time by interactively calling
 `pallet-mode` (`M-x pallet-mode`).
 
+##Upgrading emacs
+
+If you upgrade emacs to a new version, emacs will fail to start properly. You
+will need to reinstall pallet using `M-x list-packages`, and then run `M-x
+pallet-install` to reinstall all your packages for the new version of emacs.
+
 ##Ignoring a section of your Cask file
 If you prefer to have Pallet ignore part of your Cask file (e.g. so
 you can use Cask's

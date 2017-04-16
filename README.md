@@ -1,13 +1,13 @@
 [![Melpa Status](http://melpa.milkbox.net/packages/pallet-badge.svg)](http://melpa.milkbox.net/#/pallet)
 
-#Pallet
+# Pallet
 Pallet is a package management helper for Emacs.
 
 It uses @rejeep's excellent
 [Cask](https://github.com/cask/cask) as a platform to keep
 track of your installed packages.
 
-##News
+## News
 Version 0.9 introduces support for Cask version and VC references,
 which will now be retained if specified in your Cask file:
 ```
@@ -28,10 +28,10 @@ Version 0.7 introduces a new integration test harness using
 [Servant](https://github.com/cask/servant). This is intended to allow
 safer and quicker addition of new features going forward.
 
-##Target platform
+## Target platform
 Pallet is currently tested with Emacs versions 24.3 through 24.4.
 
-##Use
+## Use
 Pallet has a very simple interface:
 - `M-x pallet-init` creates a Cask file using information about
   installed packages from the package.el system
@@ -44,7 +44,7 @@ Emacs package management system. Turn this on by adding `(pallet-mode
 t)` to your Emacs init file, or by calling `pallet-mode` interactively (`M-x
 pallet-mode`).
 
-##Installation
+## Installation
 To install pallet, you should first install Cask, following the
 instructions [here](http://cask.readthedocs.org/en/latest/). **At present,
 just install Cask -- don't add anything to your .emacs or init.el file**.
@@ -108,7 +108,7 @@ enable `pallet-mode` by calling `(pallet-mode t)`. You can enable or
 disable `pallet-mode` at any time by interactively calling
 `pallet-mode` (`M-x pallet-mode`).
 
-##Ignoring a section of your Cask file
+## Ignoring a section of your Cask file
 If you prefer to have Pallet ignore part of your Cask file (e.g. so
 you can use Cask's
 [VC dependencies](http://cask.readthedocs.org/en/latest/guide/dsl.html#dependencies)),
@@ -122,20 +122,20 @@ this comment.
 "https://github.com/coldnew/newlisp-mode.git")
 ```
 
-##Contributing
+## Contributing
 Contributions to pallet are very welcome.
 
 Fork and clone the repo, then run `git
 submodule update --init`, which will install
 [el.mk](http://github.com/rdallasgray/el.mk).
 
-###Simple testing
+### Simple testing
 Install [Cask](http://cask.readthedocs.org/en/latest).
 
 Then run `cask install` to install development dependencies. You
 should now be able to run the tests: `make test`.
 
-###Complete testing
+### Complete testing
 The pallet dev setup includes a Vagrantfile, which allows pallet to be
 tested against a selection of recent Emacs releases.
 
@@ -153,7 +153,7 @@ Shell into the vm by running `vagrant ssh`, and run the tests using
 `./test_all.sh`. This will run the complete test suite against all
 installed Emacs versions.
 
-###Pull requests
+### Pull requests
 Any new feature or fix should be covered by tests -- see the files
 in /test for guidance on how to write your own. When you've
 created your feature or fix, make a pull request against master in this repo.

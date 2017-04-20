@@ -42,6 +42,7 @@
 
 (require 'cask)
 (require 'f)
+(require 'dash)
 
 ;; interactive/api functions
 
@@ -236,6 +237,32 @@ use `pallet--package-archives-copy' if USE-COPY is true."
     (when (not (pallet--installed-p package-name))
       (message "Pallet: unpacking %s" package-name)
       (pallet--unpack-one package-name))))
+
+;; Command to remove unrequested packages
+(defun pallet-prune ()
+  "Remove packages not referenced in the Cask file."
+  (interactive)
+  (let* ((installed-pkgs
+          (mapcar #'epl-package-name (epl-installed-packages)))
+         (required-pkgs
+          (mapcar #'cask-dependency-name (cask-dependencies (cask-initialize) t)))
+         (removable-packages (delete-dups (sort (-difference installed-pkgs required-pkgs) #'string<)))
+         (answer
+          (if removable-packages
+              (yes-or-no-p (format "Remove the following packages? %S" removable-packages))
+            (message "No packages eligible for auto-removal")
+            nil)))
+    (when answer
+      (mapc (lambda (epl-pkg)
+              (when (memq (epl-package-name epl-pkg) removable-packages)
+                (epl-package-delete epl-pkg)))
+            (epl-installed-packages)))))
+
+(defun pallet-sync ()
+  "Synchronise installed packages (including removal of packages not referenced in the Cask file)."
+  (interactive)
+  (pallet-install)
+  (pallet-prune))
 
 ;;;###autoload
 (define-minor-mode pallet-mode
